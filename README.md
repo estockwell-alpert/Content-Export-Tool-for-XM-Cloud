@@ -1,16 +1,6 @@
+This project was started for **Sitecore Hackathon 2025** by team DED (Dan Solovay, Erica Stockwell-Alpert, Dylan Young)
+
 ![Hackathon Logo](docs/images/hackathon.png?raw=true 'Hackathon Logo')
-
-# Sitecore Hackathon 2025
-
-## Team name
-
-DED
-
-## Category
-
-The Unicategory
-
-## Description
 
 ### Content Export Tool for XM Cloud
 
