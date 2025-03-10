@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: C:\etc\traefik\certs\xm1cm.localhost.pem
+      keyFile: C:\etc\traefik\certs\xm1cm.localhost-key.pem
+    - certFile: C:\etc\traefik\certs\xm1id.localhost.pem
+      keyFile: C:\etc\traefik\certs\xm1id.localhost-key.pem

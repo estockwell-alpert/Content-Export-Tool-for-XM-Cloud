@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+    <Sitecore>
+        <IdentityServer>
+            <Clients>
+                <GraphQlClient>
+                    <ClientId>graphql-api</ClientId>
+                    <ClientName>GraphQL Token Provider</ClientName>
+                    <AccessTokenType>0</AccessTokenType>
+                    <AllowOfflineAccess>true</AllowOfflineAccess>
+                    <AlwaysIncludeUserClaimsInIdToken>false</AlwaysIncludeUserClaimsInIdToken>
+                    <AccessTokenLifetimeInSeconds>3600</AccessTokenLifetimeInSeconds>
+                    <IdentityTokenLifetimeInSeconds>3600</IdentityTokenLifetimeInSeconds>
+                    <AllowAccessTokensViaBrowser>true</AllowAccessTokensViaBrowser>
+                    <RequireConsent>false</RequireConsent>
+                    <RequireClientSecret>false</RequireClientSecret>
+                    <AllowedGrantTypes>
+                        <AllowedGrantType1>password</AllowedGrantType1>
+                    </AllowedGrantTypes>
+                   
+                    <AllowedScopes>
+                        <!-- Scopes documented here:
+                        https://doc.sitecore.com/xp/en/developers/103/sitecore-experience-manager/use-bearer-tokens-in-client-applications.html -->
+                        <AllowedScope1>openid</AllowedScope1>
+                        <AllowedScope2>sitecore.profile</AllowedScope2>
+                        <AllowedScope3>sitecore.profile.api</AllowedScope3>
+                    </AllowedScopes>
+                    <UpdateAccessTokenClaimsOnRefresh>true</UpdateAccessTokenClaimsOnRefresh>
+                </GraphQlClient>
+            </Clients>
+        </IdentityServer>
+    </Sitecore>
+</Settings>
