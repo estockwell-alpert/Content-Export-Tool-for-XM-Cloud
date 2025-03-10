@@ -1,7 +1,3 @@
-This project was started for **Sitecore Hackathon 2025** by team DED (Dan Solovay, Erica Stockwell-Alpert, Dylan Young)
-
-![Hackathon Logo](docs/images/hackathon.png?raw=true 'Hackathon Logo')
-
 ## Content Export Tool for XM Cloud
 
 The purpose of this module is to enable Sitecore authors (with limited technical ability) to flexibly and easily export content in bulk from Sitecore, using a user friendly UI that enables them to export any configuration of item and fields (no need to write Powershell scripts).
@@ -144,3 +140,8 @@ Once you are on the Copilot page (https://sitecore-content-export.vercel.app/con
 
 - Update feature does not work from the browser due to CORS
 - There is a known export bug with outputting fields that contain quotes and commas, where these fields get broken across multiple cells in Excel. This may affect the output of rich text fields.
+
+
+This project was started for **Sitecore Hackathon 2025** by team DED (Dan Solovay, Erica Stockwell-Alpert, Dylan Young)
+
+![Hackathon Logo](docs/images/hackathon.png?raw=true 'Hackathon Logo')
