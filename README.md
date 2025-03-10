@@ -2,7 +2,7 @@ This project was started for **Sitecore Hackathon 2025** by team DED (Dan Solova
 
 ![Hackathon Logo](docs/images/hackathon.png?raw=true 'Hackathon Logo')
 
-### Content Export Tool for XM Cloud
+## Content Export Tool for XM Cloud
 
 The purpose of this module is to enable Sitecore authors (with limited technical ability) to flexibly and easily export content in bulk from Sitecore, using a user friendly UI that enables them to export any configuration of item and fields (no need to write Powershell scripts).
 
