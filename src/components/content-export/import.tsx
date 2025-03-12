@@ -16,30 +16,49 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const [selectedFile, setSelectedFile] = useState<File>();
   const [isUpdate, setIsUpdate] = useState<boolean>(true);
   const [isCreate, setIsCreate] = useState<boolean>(false);
+  const [parsedCsvData, setParsedCsvData] = useState<any>();
   const onFileChange = (event: any) => {
     // Update the state
-    setSelectedFile(event.target.files[0]);
+    const file = event.target.files[0];
+    setSelectedFile(file);
+
+    try {
+      if (!file) {
+        alert('No file selected');
+        return;
+      }
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function (results) {
+          setParsedCsvData(results.data);
+        },
+      });
+    } catch (error) {
+      console.error('Error updating content:', error);
+    }
   };
 
-  const onFileUpload = () => {
-    if (!selectedFile) {
-      alert('No file selected');
-      return;
+  const handleRunImport = async () => {
+    try {
+      if (!parsedCsvData) {
+        alert('Please upload a file');
+        return;
+      }
+
+      if (isUpdate) {
+        await PostMutationQuery(true, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, parsedCsvData);
+      } else if (isCreate) {
+        await PostMutationQuery(false, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, parsedCsvData);
+      }
+
+      alert('done with upate');
+      // clear out csv data
+      setParsedCsvData(null);
+    } catch (error) {
+      console.error('Error updating content:', error);
     }
-
-    Papa.parse(selectedFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function (results) {
-        console.log(results.data);
-
-        if (isUpdate) {
-          PostMutationQuery(true, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, results.data);
-        } else if (isCreate) {
-          PostMutationQuery(false, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, results.data);
-        }
-      },
-    });
   };
 
   const fileData = () => {
@@ -79,7 +98,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       <CardContent className="space-y-6">
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Input type="file" accept=".csv" onChange={onFileChange} className="cursor-pointer" />
-          <Button onClick={onFileUpload} disabled={!selectedFile}>
+          <Button onClick={handleRunImport} disabled={!selectedFile}>
             Import
           </Button>
         </div>

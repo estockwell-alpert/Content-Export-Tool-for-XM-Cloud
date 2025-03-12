@@ -1,5 +1,6 @@
 import { enumInstanceType } from '@/models/IInstance';
 import { GetSearchQuery } from './createGqlQuery';
+import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
 
 export const GenerateContentExport = (
@@ -179,7 +180,12 @@ export const GetContentExportResults = async (
 
 let errorHasBeenDisplayed = false;
 
-export const PostMutationQuery = (update: boolean, gqlEndpoint?: string, authToken?: string, csvData?: any[]): void => {
+export const PostMutationQuery = async (
+  update: boolean,
+  gqlEndpoint?: string,
+  authToken?: string,
+  csvData?: any[]
+): Promise<void> => {
   errorHasBeenDisplayed = false;
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -265,35 +271,18 @@ export const PostMutationQuery = (update: boolean, gqlEndpoint?: string, authTok
     queries.push(jsonQuery);
   }
 
-  Promise.all(queries.map((query) => PostUpdateQuery(gqlEndpoint, authToken, JSON.stringify(query)))).then(
-    (results) => {
-      if (loadingModal) {
-        loadingModal.style.display = 'none';
-      }
-
-      results.forEach((result) => console.log(result));
-    }
-  );
-};
-
-export const PostUpdateQuery = (gqlEndpoint: string, authToken: string, jsonQuery: string) => {
-  fetch(gqlEndpoint, {
-    method: 'POST',
-    headers: new Headers({ Authorization: 'Bearer ' + authToken, 'content-type': 'application/json' }),
-    body: JSON.stringify(jsonQuery),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      // parse data
-      const results = data;
+  try {
+    for (var i = 0; i < queries.length; i++) {
+      const results = await postToAuthApi(gqlEndpoint, authToken, JSON.stringify(queries[i]));
       console.log(results);
-    })
-    .catch((error) => {
-      console.error('Error:', error);
+    }
 
-      if (!errorHasBeenDisplayed) {
-        alert('Something went wrong. Check the console for errors.');
-      }
-      errorHasBeenDisplayed = true;
-    });
+    alert('done!');
+  } catch (error) {
+    alert('Error');
+  }
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
 };
