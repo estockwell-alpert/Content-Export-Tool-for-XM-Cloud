@@ -185,7 +185,7 @@ export const PostMutationQuery = async (
   gqlEndpoint?: string,
   authToken?: string,
   csvData?: any[]
-): Promise<void> => {
+): Promise<string[]> => {
   errorHasBeenDisplayed = false;
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -195,12 +195,12 @@ export const PostMutationQuery = async (
 
   if (!gqlEndpoint || !authToken) {
     alert('Select an Instance with an Auth token');
-    return;
+    return [];
   }
 
   if (!csvData) {
     alert('No file data found');
-    return;
+    return [];
   }
 
   let queries = [];
@@ -226,7 +226,7 @@ export const PostMutationQuery = async (
       if (loadingModal) {
         loadingModal.style.display = 'none';
       }
-      return;
+      return [];
     }
 
     if (row['Language']) {
@@ -271,18 +271,36 @@ export const PostMutationQuery = async (
     queries.push(jsonQuery);
   }
 
+  const errors: string[] = [];
+
   try {
     for (var i = 0; i < queries.length; i++) {
       const results = await postToAuthApi(gqlEndpoint, authToken, JSON.stringify(queries[i]));
+      console.log('Results: ');
       console.log(results);
+
+      if (results.errors) {
+        for (var j = 0; j < results.errors.length; j++) {
+          var error = results.errors[j];
+          errors.push(error.message.replace(/[\r\n]+/gm, ' '));
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
     }
 
-    alert('done!');
-  } catch (error) {
-    alert('Error');
+    return [JSON.stringify(error)];
   }
 
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
+
+  console.log('ERRORS: ');
+  console.log(errors);
+  return errors;
 };

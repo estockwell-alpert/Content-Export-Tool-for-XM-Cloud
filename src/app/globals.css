@@ -165,3 +165,11 @@ p[data-slot='dialog-description'] {
   font-weight: bold;
   font-size: 22px;
 }
+
+.errors {
+  color: red;
+
+  span {
+    display: block;
+  }
+}

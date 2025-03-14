@@ -1,4 +1,4 @@
-export const postToAuthApi = async (gqlEndpoint: string, authToken: string, jsonQuery: string): Promise<string> => {
+export const postToAuthApi = async (gqlEndpoint: string, authToken: string, jsonQuery: string): Promise<any> => {
   try {
     console.log(gqlEndpoint);
     console.log(authToken);
@@ -21,7 +21,7 @@ export const postToAuthApi = async (gqlEndpoint: string, authToken: string, json
     console.log(response);
 
     const results = await response.json();
-    return JSON.stringify(results);
+    return results;
   } catch (error) {
     console.error('Error posting to authoring API:', error);
     throw error;

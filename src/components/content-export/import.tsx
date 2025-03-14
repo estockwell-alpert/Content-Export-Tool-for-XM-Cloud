@@ -17,7 +17,9 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const [isUpdate, setIsUpdate] = useState<boolean>(true);
   const [isCreate, setIsCreate] = useState<boolean>(false);
   const [parsedCsvData, setParsedCsvData] = useState<any>();
+  const [errors, setErrors] = useState<string[]>([]);
   const onFileChange = (event: any) => {
+    setErrors([]);
     // Update the state
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -48,12 +50,25 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       }
 
       if (isUpdate) {
-        await PostMutationQuery(true, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, parsedCsvData);
+        const errors = await PostMutationQuery(
+          true,
+          activeInstance?.graphQlEndpoint,
+          activeInstance?.apiToken,
+          parsedCsvData
+        );
+        console.log(errors);
+        setErrors(errors);
       } else if (isCreate) {
-        await PostMutationQuery(false, activeInstance?.graphQlEndpoint, activeInstance?.apiToken, parsedCsvData);
+        const errors = await PostMutationQuery(
+          false,
+          activeInstance?.graphQlEndpoint,
+          activeInstance?.apiToken,
+          parsedCsvData
+        );
+        setErrors(errors);
       }
 
-      alert('done with upate');
+      alert('Done with update');
       // clear out csv data
       setParsedCsvData(null);
     } catch (error) {
@@ -61,30 +76,6 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
     }
   };
 
-  const fileData = () => {
-    if (selectedFile) {
-      return (
-        <div>
-          <h2>File Details:</h2>
-          <p>File Name: {selectedFile.name}</p>
-
-          <p>File Type: {selectedFile.type}</p>
-
-          <p>
-            Last Modified:
-            {selectedFile.lastModified}
-          </p>
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <br />
-          <h4>Choose before Pressing the Upload button</h4>
-        </div>
-      );
-    }
-  };
   return (
     <Card className="rounded-sm border bg-card">
       <CardHeader>
@@ -96,6 +87,12 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <p className="errors">
+          {errors.map((error) => (
+            <span>{error}</span>
+          ))}
+        </p>
+
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Input type="file" accept=".csv" onChange={onFileChange} className="cursor-pointer" />
           <Button onClick={handleRunImport} disabled={!selectedFile}>
