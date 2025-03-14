@@ -1,14 +1,24 @@
 export const postToAuthApi = async (gqlEndpoint: string, authToken: string, jsonQuery: string): Promise<string> => {
   try {
-    const response = await fetch(gqlEndpoint, {
+    console.log(gqlEndpoint);
+    console.log(authToken);
+    console.log(jsonQuery);
+
+    console.log('FETCH:');
+
+    const response = await fetch('/api/authoring/update', {
       method: 'POST',
-      headers: new Headers({ Authorization: 'Bearer ' + authToken, 'content-type': 'application/json' }),
-      body: JSON.stringify(jsonQuery),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ gqlEndpoint, jsonQuery, authToken }),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    console.log(response);
 
     const results = await response.json();
     return JSON.stringify(results);
