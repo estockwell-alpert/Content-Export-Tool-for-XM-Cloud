@@ -18,6 +18,14 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const [isCreate, setIsCreate] = useState<boolean>(false);
   const [parsedCsvData, setParsedCsvData] = useState<any>();
   const [errors, setErrors] = useState<string[]>([]);
+  const [fileKey, setFileKey] = useState<string>('');
+
+  const clearFileInput = () => {
+    //const inpt = document.getElementById("inptFile");
+    //inpt.value
+    setFileKey(Math.random().toString(36));
+  };
+
   const onFileChange = (event: any) => {
     setErrors([]);
     // Update the state
@@ -68,11 +76,17 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         setErrors(errors);
       }
 
-      alert('Done with update');
+      const message = isUpdate ? 'Update' : 'Create';
+
+      if (errors && errors.length > 0) {
+        alert(message + ' completed with errors; check error messages');
+      } else {
+        alert(message + 'd ' + parsedCsvData.length + ' items');
+      }
       // clear out csv data
       setParsedCsvData(null);
     } catch (error) {
-      console.error('Error updating content:', error);
+      console.error('Error importing content:', error);
     }
   };
 
@@ -82,8 +96,6 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         <CardTitle>Import Content</CardTitle>
         <CardDescription>
           Import content from CSV files into your Sitecore instance <br />
-          <b>Note</b>: At this time, Import is not working because requests to the GraphQL Authoring API are blocked by
-          CORS policy. However, you can see the generated mutation queries logged in the browser.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -94,7 +106,15 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         </p>
 
         <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Input type="file" accept=".csv" onChange={onFileChange} className="cursor-pointer" />
+          <Input
+            key={fileKey}
+            id="inptFile"
+            type="file"
+            accept=".csv"
+            onChange={onFileChange}
+            className="cursor-pointer"
+          />
+          <a onClick={clearFileInput}>Clear</a>
           <Button onClick={handleRunImport} disabled={!selectedFile}>
             Import
           </Button>
