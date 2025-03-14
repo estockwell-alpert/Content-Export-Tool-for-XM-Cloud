@@ -37,6 +37,10 @@ const data = {
           url: '/content/export',
         },
         {
+          title: 'Import Tool',
+          url: '/content/import',
+        },
+        {
           title: 'Copilot',
           url: '/content/copilot',
         },

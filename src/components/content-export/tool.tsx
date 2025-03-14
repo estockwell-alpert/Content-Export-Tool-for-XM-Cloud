@@ -11,12 +11,13 @@ import { ImportTool } from './import';
 
 interface ContentTransferToolProps {
   instances: IInstance[];
+  isExportOpen: boolean;
 }
 
-export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances }) => {
+export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, isExportOpen }) => {
   const [activeInstance, setActiveInstance] = useState<IInstance | undefined>();
   const [configurationOpen, setConfigurationOpen] = useState<boolean>(true);
-  const [exportOpen, setExportOpen] = useState<boolean>(true);
+  const [exportOpen, setExportOpen] = useState<boolean>(isExportOpen);
 
   const handleInstanceSelect = (value: string) => {
     console.log('hello');
@@ -101,7 +102,7 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances })
       <br />
 
       {activeInstance && (
-        <Tabs defaultValue="export" className="w-full">
+        <Tabs defaultValue={isExportOpen ? 'export' : 'import'} className="w-full">
           <TabsList className="grid w-full grid-cols-2 border-b border-border">
             <TabsTrigger value="export" className="">
               Export
@@ -110,11 +111,11 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances })
               Import
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="export" className="pt-6">
-            <ExportTool activeInstance={activeInstance} setExportOpen={setExportOpen} exportOpen={exportOpen} />
-          </TabsContent>
           <TabsContent value="import" className="pt-6">
             <ImportTool activeInstance={activeInstance} />
+          </TabsContent>
+          <TabsContent value="export" className="pt-6">
+            <ExportTool activeInstance={activeInstance} setExportOpen={setExportOpen} exportOpen={exportOpen} />
           </TabsContent>
         </Tabs>
       )}
