@@ -1,6 +1,7 @@
 import { IInstance } from '@/models/IInstance';
 import { ISettings } from '@/models/ISettings';
 import { GenerateContentExport } from '@/services/sitecore/contentExportToolUtil';
+import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
 import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -22,6 +23,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [fields, setFields] = useState<string>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
+  const [availableFields, setAvailableFields] = useState<string[]>();
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setStartItem(event.target.value);
@@ -43,6 +45,58 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
 
     await GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
+  };
+
+  const browseFields = () => {
+    setAvailableFields([]);
+    if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
+      alert('You must select an instance first');
+      return;
+    }
+
+    if (!templateNames) {
+      alert('Enter a template name');
+      return;
+    }
+
+    console.log(activeInstance);
+
+    const query = SchemaTemplate.replace('[templatename]', templateNames.trim());
+
+    const jsonQuery = {
+      query: query,
+    };
+
+    console.log(jsonQuery);
+
+    let fieldsList = availableFields ?? [];
+
+    fetch(activeInstance.graphQlEndpoint, {
+      method: 'POST',
+      headers: new Headers({ sc_apikey: activeInstance.apiToken, 'content-type': 'application/json' }),
+      body: JSON.stringify(jsonQuery),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // parse data
+        console.log(data);
+
+        const results = data.data.__type.fields;
+        console.log(results);
+
+        for (var i = 0; i < results.length; i++) {
+          console.log(results[i]);
+          const result = results[i];
+          const field = result.name;
+
+          fieldsList.push(field);
+        }
+
+        setAvailableFields(fieldsList);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   };
 
   useEffect(() => {
@@ -198,6 +252,43 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
                     Save Settings
                   </Button>
+                </div>
+              </div>
+
+              <br />
+              <br />
+
+              <div className="">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    Browse Fields - input template names below, then click button to see available fields
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <Textarea
+                  placeholder="e.g. Person, Whitepaper, LandingPage"
+                  onChange={handleTemplateNames}
+                  className="text-sm"
+                ></Textarea>
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="default" size="sm" onClick={() => browseFields()}>
+                      Browse Fields
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {availableFields && <label className="text-sm font-medium">Available Fields:</label>}
+
+                  <div className="items-center gap-2 mt-4 fieldsList">
+                    {availableFields && availableFields.map((field, index) => <p key={index}>{field}</p>)}
+                  </div>
                 </div>
               </div>
             </div>

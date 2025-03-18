@@ -173,3 +173,11 @@ p[data-slot='dialog-description'] {
     display: block;
   }
 }
+
+.fieldsList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 8px;
+}
