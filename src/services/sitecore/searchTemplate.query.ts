@@ -1,4 +1,6 @@
-export const SearchQueryTemplate = `
+import { gql } from 'graphql-request';
+
+export const SearchQueryTemplate = gql`
 {
     pageOne: search(
         where: {
@@ -16,6 +18,7 @@ export const SearchQueryTemplate = `
             ]
         }
         first: 1000
+        afterFragment
         ) {
         total
         pageInfo {

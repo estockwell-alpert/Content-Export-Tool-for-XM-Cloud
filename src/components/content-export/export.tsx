@@ -36,13 +36,13 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setTemplateNames(event.target.value);
   };
 
-  const runExport = () => {
+  const runExport = async () => {
     if (!activeInstance || !activeInstance.name) {
       alert('Please select an instance. If you do not have any instances, configure one now');
       return;
     }
 
-    GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
+    await GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
   };
 
   useEffect(() => {

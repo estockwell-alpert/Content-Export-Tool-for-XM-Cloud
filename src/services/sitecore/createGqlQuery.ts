@@ -5,7 +5,8 @@ export const GetSearchQuery = (
   gqlApiKey?: string,
   startItems?: string,
   templates?: string,
-  fields?: string
+  fields?: string,
+  cursor?: string
 ): string => {
   if (!gqlEndpoint || !gqlApiKey) {
     return 'GQL Endpoint and API Key are required. Please see Configuration section';
@@ -71,15 +72,10 @@ export const GetSearchQuery = (
 
   const query = SearchQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
-    .replace('fieldsFragment', fieldsFragment);
+    .replace('fieldsFragment', fieldsFragment)
+    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
-  console.log(query);
-
-  const jsonQuery = {
-    query: query,
-  };
-
-  return JSON.stringify(jsonQuery);
+  return query;
 };
 
 export const GetAvailableFields = (templateNames: string): string[] => {

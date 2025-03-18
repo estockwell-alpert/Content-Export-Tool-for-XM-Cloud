@@ -1,9 +1,10 @@
 import { enumInstanceType } from '@/models/IInstance';
+import { GraphQLClient } from 'graphql-request';
 import { GetSearchQuery } from './createGqlQuery';
 import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
 
-export const GenerateContentExport = (
+export const GenerateContentExport = async (
   gqlEndpoint?: string,
   gqlApiKey?: string,
   startItem?: string,
@@ -12,16 +13,109 @@ export const GenerateContentExport = (
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
-  if (loadingModal) {
-    loadingModal.style.display = 'block';
-  }
 
-  const query = GetSearchQuery(gqlEndpoint, gqlApiKey, startItem, templates, fields);
-
+  ///
   if (!gqlEndpoint || !gqlApiKey) {
     return;
   }
 
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const graphQLClient = new GraphQLClient(gqlEndpoint);
+  graphQLClient.setHeader('sc_apikey', gqlApiKey);
+
+  let hasNext = true;
+  let results: any[] = [];
+  let cursor = '';
+  let calls = 0;
+
+  while (hasNext && calls < 100) {
+    try {
+      const query = GetSearchQuery(gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
+
+      const data: any = await graphQLClient.request(query);
+
+      results = results.concat(data?.pageOne?.results);
+      hasNext = data?.pageOne?.pageInfo?.hasNext;
+      cursor = data?.pageOne?.pageInfo?.endCursor;
+
+      calls += 1;
+    } catch (ex) {
+      console.log(ex);
+    }
+    calls += 1;
+  }
+
+  console.log('Completed GQL calls. Results:');
+  console.log(results);
+
+  let csvData = [];
+
+  // first row of CSV
+  const fieldStrings = fields?.split(',');
+  let headerRow = 'Item Path,Name,ID,';
+  if (fieldStrings) {
+    for (var i = 0; i < fieldStrings.length; i++) {
+      if (fieldStrings[i].trim() === '') {
+        continue;
+      }
+
+      headerRow += fieldStrings[i].trim() + ',';
+    }
+  }
+  csvData.push(headerRow);
+
+  for (var i = 0; i < results.length; i++) {
+    const result = results[i];
+
+    let resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
+
+    if (fieldStrings) {
+      for (var j = 0; j < fieldStrings.length; j++) {
+        const field = fieldStrings[j].trim();
+
+        if (fieldStrings[j].trim() === '') {
+          continue;
+        }
+
+        const fieldValue = result[field]?.value ?? 'n/a';
+
+        let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '\\"');
+        // double quote to escape commas
+        if (cleanFieldValue.indexOf(',') > -1) {
+          cleanFieldValue = '"' + cleanFieldValue + '"';
+        }
+
+        resultRow += (cleanFieldValue ?? 'n/a') + ',';
+      }
+    }
+
+    csvData.push(resultRow);
+  }
+
+  let csvString = '';
+  for (let i = 0; i < csvData.length; i++) {
+    csvString += csvData[i] + '\n';
+  }
+
+  const element = document.createElement('a');
+  const file = new Blob([csvString], { type: 'text/csv' });
+  element.href = URL.createObjectURL(file);
+  element.download = 'ContentExport.csv';
+  document.body.appendChild(element); // Required for this to work in FireFox
+  element.click();
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
+
+  alert('Done - check your downloads!');
+};
+
+export const GetSearchQueryResults = async (gqlEndpoint: string, gqlApiKey: string, query: string): Promise<any> => {
+  console.log(query);
   fetch(gqlEndpoint, {
     method: 'POST',
     headers: new Headers({ sc_apikey: gqlApiKey, 'content-type': 'application/json' }),
@@ -30,76 +124,13 @@ export const GenerateContentExport = (
     .then((response) => response.json())
     .then((data) => {
       // parse data
-      const results = data.data.pageOne.results;
-
-      let csvData = [];
-
-      // first row of CSV
-      const fieldStrings = fields?.split(',');
-      let headerRow = 'Item Path,Name,ID,';
-      if (fieldStrings) {
-        for (var i = 0; i < fieldStrings.length; i++) {
-          if (fieldStrings[i].trim() === '') {
-            continue;
-          }
-
-          headerRow += fieldStrings[i].trim() + ',';
-        }
-      }
-      csvData.push(headerRow);
-
-      for (var i = 0; i < results.length; i++) {
-        const result = results[i];
-
-        let resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
-
-        if (fieldStrings) {
-          for (var j = 0; j < fieldStrings.length; j++) {
-            const field = fieldStrings[j].trim();
-
-            if (fieldStrings[j].trim() === '') {
-              continue;
-            }
-
-            const fieldValue = result[field]?.value ?? 'n/a';
-
-            let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '\\"');
-            // double quote to escape commas
-            if (cleanFieldValue.indexOf(',') > -1) {
-              cleanFieldValue = '"' + cleanFieldValue + '"';
-            }
-
-            resultRow += (cleanFieldValue ?? 'n/a') + ',';
-          }
-        }
-
-        csvData.push(resultRow);
-      }
-
-      let csvString = '';
-      for (let i = 0; i < csvData.length; i++) {
-        csvString += csvData[i] + '\n';
-      }
-
-      const element = document.createElement('a');
-      const file = new Blob([csvString], { type: 'text/csv' });
-      element.href = URL.createObjectURL(file);
-      element.download = 'ContentExport.csv';
-      document.body.appendChild(element); // Required for this to work in FireFox
-      element.click();
-
-      if (loadingModal) {
-        loadingModal.style.display = 'none';
-      }
-
-      alert('Done - check your downloads!');
+      console.log('Results: ');
+      const results = data.data.pageOne;
+      console.log(results);
+      return results;
     })
     .catch((error) => {
-      console.error('Error:', error);
-      alert('Something went wrong. Check the console for errors');
-      if (loadingModal) {
-        loadingModal.style.display = 'none';
-      }
+      console.log(error);
     });
 };
 
