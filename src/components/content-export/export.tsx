@@ -85,7 +85,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
     console.log(jsonQuery);
 
-    let fieldsList = availableFields ?? [];
+    let fieldsList = [];
 
     fetch(activeInstance.graphQlEndpoint, {
       method: 'POST',
@@ -298,21 +298,25 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     </Button>
                   </div>
                 </div>
+                {availableFields && availableFields.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <label className="text-sm font-medium">Available Fields:</label>
 
-                <div className="mt-4 space-y-2">
-                  {availableFields && <label className="text-sm font-medium">Available Fields:</label>}
-
-                  <div className="items-center gap-2 mt-4 fieldsList">
-                    {availableFields &&
-                      availableFields.map((field, index) => (
-                        <p key={index}>
-                          <a className={fieldIsSelected(field) ? 'disabled' : ''} onDoubleClick={() => addField(field)}>
-                            {field}
-                          </a>
-                        </p>
-                      ))}
+                    <div className="items-center gap-2 mt-4 fieldsList">
+                      {availableFields &&
+                        availableFields.map((field, index) => (
+                          <p key={index}>
+                            <a
+                              className={fieldIsSelected(field) ? 'disabled' : ''}
+                              onDoubleClick={() => addField(field)}
+                            >
+                              {field}
+                            </a>
+                          </p>
+                        ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
