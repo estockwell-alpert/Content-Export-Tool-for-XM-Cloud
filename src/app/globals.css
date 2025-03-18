@@ -181,3 +181,12 @@ p[data-slot='dialog-description'] {
   border-radius: 12px;
   padding: 8px;
 }
+
+.fieldsList a {
+  cursor: pointer;
+}
+
+a.disabled {
+  pointer-events: none;
+  color: #ddd;
+}

@@ -47,6 +47,22 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     await GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
   };
 
+  const fieldIsSelected = (field: string): boolean => {
+    const currentFields = fields?.split(',').map((x) => x.trim());
+
+    return currentFields?.includes(field) ?? false;
+  };
+
+  const addField = (field: string) => {
+    if (fieldIsSelected(field)) return;
+
+    if (fields) {
+      setFields(fields + ', ' + field);
+    } else {
+      setFields(field);
+    }
+  };
+
   const browseFields = () => {
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
@@ -287,7 +303,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   {availableFields && <label className="text-sm font-medium">Available Fields:</label>}
 
                   <div className="items-center gap-2 mt-4 fieldsList">
-                    {availableFields && availableFields.map((field, index) => <p key={index}>{field}</p>)}
+                    {availableFields &&
+                      availableFields.map((field, index) => (
+                        <p key={index}>
+                          <a className={fieldIsSelected(field) ? 'disabled' : ''} onDoubleClick={() => addField(field)}>
+                            {field}
+                          </a>
+                        </p>
+                      ))}
                   </div>
                 </div>
               </div>
