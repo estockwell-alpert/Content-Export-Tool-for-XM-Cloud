@@ -60,8 +60,8 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       if (isUpdate) {
         const errors = await PostMutationQuery(
           true,
-          activeInstance?.graphQlEndpoint,
-          activeInstance?.apiToken,
+          activeInstance?.importEndpoint,
+          activeInstance?.authToken,
           parsedCsvData
         );
         console.log(errors);
@@ -69,8 +69,8 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       } else if (isCreate) {
         const errors = await PostMutationQuery(
           false,
-          activeInstance?.graphQlEndpoint,
-          activeInstance?.apiToken,
+          activeInstance?.importEndpoint,
+          activeInstance?.authToken,
           parsedCsvData
         );
         setErrors(errors);

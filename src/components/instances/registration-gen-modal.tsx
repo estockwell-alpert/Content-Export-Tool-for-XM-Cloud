@@ -64,6 +64,8 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
         graphQlEndpoint: values.graphQlEndpoint,
         instanceType: enumInstanceType.xp,
         apiToken: tokenResponse.access_token,
+        exportEndpoint: '',
+        importEndpoint: '',
       });
       form.reset();
     } catch (error) {

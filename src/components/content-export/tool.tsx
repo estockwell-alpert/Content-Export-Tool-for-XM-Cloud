@@ -31,6 +31,9 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
         graphQlEndpoint: '',
         apiToken: '',
         id: '',
+        authToken: '',
+        importEndpoint: '',
+        exportEndpoint: '',
       }
     );
 

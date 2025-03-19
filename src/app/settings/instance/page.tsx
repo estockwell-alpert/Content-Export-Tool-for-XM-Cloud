@@ -43,10 +43,33 @@ export default function InstanceSetupPage() {
       if (newInstance.instanceType === enumInstanceType.xmc) {
         const tokenResponse = await getXmCloudToken(newInstance.clientId as string, newInstance.clientSecret as string);
 
-        newInstance.apiToken = tokenResponse.access_token;
+        newInstance.authToken = tokenResponse.access_token;
 
         // Store token expiration if needed
         newInstance.expiration = new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString();
+      }
+
+      if (newInstance.instanceType === enumInstanceType.edge) {
+        newInstance.exportEndpoint = 'https://edge.sitecorecloud.io/api/graphql/v1';
+      } else {
+        // automatically generate import and export endpoints
+        if (newInstance.graphQlEndpoint && newInstance.graphQlEndpoint.indexOf('/sitecore/api') < 0) {
+          const instanceUrl =
+            newInstance.graphQlEndpoint.substring(newInstance.graphQlEndpoint.length - 1) === '/'
+              ? newInstance.graphQlEndpoint.substring(0, newInstance.graphQlEndpoint.length - 1)
+              : newInstance.graphQlEndpoint;
+
+          newInstance.graphQlEndpoint = instanceUrl;
+
+          console.log('Instance URL:' + instanceUrl);
+
+          newInstance.exportEndpoint = instanceUrl + '/sitecore/api/graphql/v1';
+          newInstance.importEndpoint = instanceUrl + '/sitecore/api/authoring/graphql/v1';
+        } else {
+          // if they put in a full URL, we don't know whether it's an import or export endpoint so just set both
+          newInstance.importEndpoint = newInstance.graphQlEndpoint;
+          newInstance.exportEndpoint = newInstance.graphQlEndpoint;
+        }
       }
 
       const instance: IInstance = {
@@ -101,11 +124,11 @@ export default function InstanceSetupPage() {
                 <div className="flex gap-2">
                   <Button onClick={() => setIsTokenModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add API Token
+                    Add Instance
                   </Button>
                   <Button onClick={() => setIsGenModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Generate Token
+                    Generate Authorization Token
                   </Button>
                 </div>
               </div>

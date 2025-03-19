@@ -23,6 +23,9 @@ const formSchema = z.object({
   clientId: z.string(),
   clientSecret: z.string(),
   apiToken: z.string(),
+  authToken: z.string(),
+  exportEndpoint: z.string(),
+  importEndpoint: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,6 +46,9 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
       clientSecret: '',
       graphQlEndpoint: '',
       apiToken: '',
+      authToken: '',
+      exportEndpoint: '',
+      importEndpoint: '',
     },
   });
 
@@ -59,9 +65,24 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Register New Instance</DialogTitle>
-          <DialogDescription>
-            This form assumes you've already generated a token from XM Cloud or generated a Token from Sitecore XP/XM.
-          </DialogDescription>
+          {instanceType === enumInstanceType.xp ? (
+            <DialogDescription>
+              This form assumes you have manually generated an Authorization Token or intend to only use item API
+              (export only). To generate an Authorization Token for your instance, use the Generate Token button.
+            </DialogDescription>
+          ) : (
+            <>
+              {instanceType === enumInstanceType.xmc ? (
+                <DialogDescription>
+                  This form will automatically generate an Authorization Token for your instance. If you only intend to
+                  use the Export feature, you can skip the Client ID and Client Secret; if you only intend to use
+                  Import, you can skip the Sitecore API Key
+                </DialogDescription>
+              ) : (
+                ''
+              )}
+            </>
+          )}
         </DialogHeader>
 
         <Form {...form}>
@@ -81,25 +102,31 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                     <SelectContent>
                       <SelectItem value={enumInstanceType.xmc}>Sitecore XM Cloud</SelectItem>
                       <SelectItem value={enumInstanceType.xp}>Sitecore XM/XP</SelectItem>
+                      <SelectItem value={enumInstanceType.edge}>Edge (Export only)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instance Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Production Server" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            {instanceType === enumInstanceType.edge ? (
+              ''
+            ) : (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instance Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Production Instance" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {instanceType === enumInstanceType.xp ? (
               <FormField
@@ -107,9 +134,9 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                 name="graphQlEndpoint"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>GraphQL Endpoint</FormLabel>
+                    <FormLabel>Instance URL</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://xmc-*.sitecorecloud.io/sitecore/api/graph/items/master" {...field} />
+                      <Input placeholder="https://cm-prod.mysite.com/" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,9 +153,9 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                   name="graphQlEndpoint"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GraphQL Endpoint</FormLabel>
+                      <FormLabel>Instance URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://xmc-*.sitecorecloud.io/sitecore/api/graph/edge/ide/" {...field} />
+                        <Input placeholder="https://xmc-*.sitecorecloud.io/" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -160,21 +187,60 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="apiToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sitecore API Key (for export)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="api-key-xxxxx" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </>
             ) : (
-              <FormField
-                control={form.control}
-                name="apiToken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>API Key</FormLabel>
-                    <FormControl>
-                      <Input placeholder="api-key-xxxxx" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <>
+                {' '}
+                <FormField
+                  control={form.control}
+                  name="apiToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sitecore API Key (for export)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="api-key-xxxxx" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {instanceType !== enumInstanceType.edge ? (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="authToken"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Authorization Token (for import)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="eyJhbGciOiJSUzI1NiIsImtpZCI6IkNUbTVfR0JIRSIsInR5cCI6ImF0K2p3dCJ9..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                ) : (
+                  ''
                 )}
-              />
+              </>
             )}
 
             <DialogFooter>

@@ -49,7 +49,7 @@ export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete }) => 
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>GraphQL Endpoint</TableHead>
+              <TableHead>Instance URL</TableHead>
               <TableHead className="w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
