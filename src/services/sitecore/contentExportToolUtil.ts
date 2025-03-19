@@ -1,5 +1,4 @@
 import { enumInstanceType } from '@/models/IInstance';
-import { GraphQLClient } from 'graphql-request';
 import { GetSearchQuery } from './createGqlQuery';
 import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
@@ -23,33 +22,23 @@ export const GenerateContentExport = async (
     loadingModal.style.display = 'block';
   }
 
-  const graphQLClient = new GraphQLClient(gqlEndpoint);
-  graphQLClient.setHeader('sc_apikey', gqlApiKey);
+  const response = await fetch('/api/export', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields }),
+  });
 
-  let hasNext = true;
-  let results: any[] = [];
-  let cursor = '';
-  let calls = 0;
-
-  while (hasNext && calls < 100) {
-    try {
-      const query = GetSearchQuery(gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
-
-      const data: any = await graphQLClient.request(query);
-
-      results = results.concat(data?.pageOne?.results);
-      hasNext = data?.pageOne?.pageInfo?.hasNext;
-      cursor = data?.pageOne?.pageInfo?.endCursor;
-
-      calls += 1;
-    } catch (ex) {
-      console.log(ex);
-    }
-    calls += 1;
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  console.log('Completed GQL calls. Results:');
-  console.log(results);
+  alert('finished getting response');
+
+  console.log(response);
+
+  const results = await response.json();
 
   let csvData = [];
 

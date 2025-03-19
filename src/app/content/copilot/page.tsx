@@ -22,6 +22,8 @@ export default function CopilotPage() {
 
   useEffect(() => {
     const saved = sessionStorage.getItem('instances');
+    console.log('INSTANCES: ');
+    console.log(instances);
     if (saved) {
       try {
         const parsedInstances = JSON.parse(saved);
