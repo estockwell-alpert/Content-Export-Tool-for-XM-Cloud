@@ -65,7 +65,7 @@ const data = {
     },
     {
       title: 'Documentation',
-      url: 'https://github.com/estockwell-alpert/Content-Export-Tool-for-XM-Cloud?tab=readme-ov-file#content-export-tool-for-xm-cloud',
+      url: 'https://github.com/estockwell-alpert/Content-Export-Tool-for-XM-Cloud?tab=readme-ov-file#using-the-application',
       icon: BookOpen,
     },
     {
