@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, FileDown, GalleryVerticalEnd, HousePlug, Settings } from 'lucide-react';
+import { BookOpen, Code, FileDown, GalleryVerticalEnd, HousePlug, Settings } from 'lucide-react';
 import * as React from 'react';
 
 import { NavMain } from '@/components/nav-main';
@@ -65,8 +65,13 @@ const data = {
     },
     {
       title: 'Documentation',
-      url: 'https://github.com/Sitecore-Hackathon/2025-DED#sitecore-hackathon-2025',
+      url: 'https://github.com/estockwell-alpert/Content-Export-Tool-for-XM-Cloud?tab=readme-ov-file#content-export-tool-for-xm-cloud',
       icon: BookOpen,
+    },
+    {
+      title: 'Source Code',
+      url: 'https://github.com/estockwell-alpert/Content-Export-Tool-for-XM-Cloud',
+      icon: Code,
     },
   ],
 };
