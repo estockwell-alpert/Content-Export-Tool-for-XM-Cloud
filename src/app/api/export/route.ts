@@ -33,6 +33,8 @@ export async function POST(request: Request) {
         calls += 1;
       } catch (ex) {
         console.log(ex);
+        results.push('GqlApiError:' + ex);
+        hasNext = false; // don't keep retrying if there's something wrong with the call
       }
       calls += 1;
     }

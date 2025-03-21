@@ -34,10 +34,6 @@ export const GenerateContentExport = async (
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  alert('finished getting response');
-
-  console.log(response);
-
   const results = await response.json();
 
   let csvData = [];
@@ -58,6 +54,15 @@ export const GenerateContentExport = async (
 
   for (var i = 0; i < results.length; i++) {
     const result = results[i];
+
+    console.log(result);
+    if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
+      alert('Something went wrong. Check the console for errors');
+      if (loadingModal) {
+        loadingModal.style.display = 'none';
+      }
+      return;
+    }
 
     let resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
 
