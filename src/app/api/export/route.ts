@@ -20,16 +20,14 @@ export async function POST(request: Request) {
       try {
         const query = GetSearchQuery(gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
 
-        console.log('Query: ');
-        console.log(query);
         const data: any = await graphQLClient.request(query);
 
         console.log('DATA:');
         console.log(data);
 
-        //results = results.concat(data?.pageOne?.results);
-        //hasNext = data?.pageOne?.pageInfo?.hasNext;
-        //cursor = data?.pageOne?.pageInfo?.endCursor;
+        results = results.concat(data?.pageOne?.results);
+        hasNext = data?.pageOne?.pageInfo?.hasNext;
+        cursor = data?.pageOne?.pageInfo?.endCursor;
         hasNext = false;
 
         calls += 1;
