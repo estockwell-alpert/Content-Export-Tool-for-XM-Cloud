@@ -24,7 +24,7 @@ export default function TokenConfigPage() {
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('api-tokens');
+      const saved = localStorage.getItem('api-tokens');
       if (saved) {
         setTokens(JSON.parse(saved));
       }
@@ -40,14 +40,14 @@ export default function TokenConfigPage() {
     };
     const updatedTokens = [...tokens, token];
     setTokens(updatedTokens);
-    sessionStorage.setItem('api-tokens', JSON.stringify(updatedTokens));
+    localStorage.setItem('api-tokens', JSON.stringify(updatedTokens));
     setIsModalOpen(false);
   };
 
   const handleDeleteToken = (id: string) => {
     const updatedTokens = tokens.filter((token) => token.id !== id);
     setTokens(updatedTokens);
-    sessionStorage.setItem('api-tokens', JSON.stringify(updatedTokens));
+    localStorage.setItem('api-tokens', JSON.stringify(updatedTokens));
   };
 
   return (

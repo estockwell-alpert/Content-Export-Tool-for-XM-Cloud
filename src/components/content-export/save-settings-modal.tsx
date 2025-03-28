@@ -35,7 +35,7 @@ export const SaveSettingsModal = ({ open, onOpenChange, onSubmit }: InstanceSett
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('settings');
+      const saved = localStorage.getItem('settings');
       if (saved) {
         const parsedSettings = JSON.parse(saved) as ISettings[];
         setSavedSettings(parsedSettings);

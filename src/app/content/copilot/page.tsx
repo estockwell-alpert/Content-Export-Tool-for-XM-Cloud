@@ -21,7 +21,7 @@ export default function CopilotPage() {
   const [openAiToken, setOpenAIToken] = useState<IToken | undefined>();
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('instances');
+    const saved = localStorage.getItem('instances');
     console.log('INSTANCES: ');
     console.log(instances);
     if (saved) {
@@ -29,13 +29,13 @@ export default function CopilotPage() {
         const parsedInstances = JSON.parse(saved);
         setInstances(parsedInstances);
       } catch (error) {
-        console.error('Error parsing instances from sessionStorage:', error);
+        console.error('Error parsing instances from localStorage:', error);
       }
     }
   }, []);
 
   useEffect(() => {
-    const savedTokens = sessionStorage.getItem('api-tokens');
+    const savedTokens = localStorage.getItem('api-tokens');
     if (savedTokens) {
       try {
         const parsedTokens = JSON.parse(savedTokens);
@@ -44,7 +44,7 @@ export default function CopilotPage() {
           setOpenAIToken(openAIConfig);
         }
       } catch (error) {
-        console.error('Error parsing tokens from sessionStorage:', error);
+        console.error('Error parsing tokens from localStorage:', error);
       }
     }
   }, []);

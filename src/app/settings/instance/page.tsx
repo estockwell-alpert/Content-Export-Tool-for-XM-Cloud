@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { enumInstanceType, IInstance } from '@/models/IInstance';
-import { getXmCloudToken } from '@/services/sitecore/getXmCloudToken';
+import { IInstance } from '@/models/IInstance';
 import { Separator } from '@radix-ui/react-separator';
 import { PlusCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -25,7 +24,7 @@ export default function InstanceSetupPage() {
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('instances');
+      const saved = localStorage.getItem('instances');
       if (saved) {
         const parsedInstances = JSON.parse(saved) as IInstance[];
         setInstances(parsedInstances);
@@ -39,16 +38,8 @@ export default function InstanceSetupPage() {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
 
   const handleAddInstance = async (newInstance: Omit<IInstance, 'id'>) => {
+    console.log('SUBMITTED');
     try {
-      if (newInstance.instanceType === enumInstanceType.xmc) {
-        const tokenResponse = await getXmCloudToken(newInstance.clientId as string, newInstance.clientSecret as string);
-
-        newInstance.apiToken = tokenResponse.access_token;
-
-        // Store token expiration if needed
-        newInstance.expiration = new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString();
-      }
-
       const instance: IInstance = {
         ...newInstance,
         id: crypto.randomUUID(),
@@ -56,7 +47,7 @@ export default function InstanceSetupPage() {
 
       const updatedInstances = [...instances, instance];
       setInstances(updatedInstances);
-      sessionStorage.setItem('instances', JSON.stringify(updatedInstances));
+      localStorage.setItem('instances', JSON.stringify(updatedInstances));
       setIsTokenModalOpen(false);
       setIsGenModalOpen(false);
     } catch (error) {
@@ -68,7 +59,7 @@ export default function InstanceSetupPage() {
     const updatedInstances = instances.filter((instance) => instance.id !== id);
     setInstances(updatedInstances);
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('instances', JSON.stringify(updatedInstances));
+      localStorage.setItem('instances', JSON.stringify(updatedInstances));
     }
   };
 
@@ -101,7 +92,7 @@ export default function InstanceSetupPage() {
                 <div className="flex gap-2">
                   <Button onClick={() => setIsTokenModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add API Token
+                    Add Instance
                   </Button>
                   <Button onClick={() => setIsGenModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />

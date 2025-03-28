@@ -38,7 +38,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      instanceType: enumInstanceType.xmc,
+      instanceType: enumInstanceType.gql,
       clientId: '',
       clientSecret: '',
       graphQlEndpoint: '',
@@ -60,7 +60,8 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
         <DialogHeader>
           <DialogTitle>Register New Instance</DialogTitle>
           <DialogDescription>
-            This form assumes you've already generated a token from XM Cloud or generated a Token from Sitecore XP/XM.
+            The Authoring form assumes you've manually generated an Authorization token. To generate an Authorization
+            token automatically, use the Generate Token button.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,48 +80,125 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={enumInstanceType.xmc}>Sitecore XM Cloud</SelectItem>
-                      <SelectItem value={enumInstanceType.xp}>Sitecore XM/XP</SelectItem>
+                      <SelectItem value={enumInstanceType.gql}>GraphQL Endpoint (Export)</SelectItem>
+                      <SelectItem value={enumInstanceType.auth}>Authoring Endpoint (Import)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instance Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Production Server" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {instanceType === enumInstanceType.xp ? (
-              <FormField
-                control={form.control}
-                name="graphQlEndpoint"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>GraphQL Endpoint</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://xmc-*.sitecorecloud.io/sitecore/api/graph/items/master" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {instanceType === enumInstanceType.gql ? (
+              <>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instance Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="MySite Export" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="graphQlEndpoint"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GraphQL Endpoint</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://edge.sitecorecloud.io/api/graphql/v1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apiToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Key</FormLabel>
+                      <FormControl>
+                        <Input placeholder="api-key-xxxxx" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            ) : (
+              <></>
+            )}
+
+            {instanceType === enumInstanceType.auth ? (
+              <>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instance Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="MySite Authoring" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="graphQlEndpoint"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Authoring Endpoint</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://xmc-*.sitecorecloud.io/sitecore/api/authoring/graphql/v1/"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="apiToken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Authorization Token</FormLabel>
+                      <FormControl>
+                        <Input placeholder="eyJhbGciOiJSUzI1NiIsImtpZCI6IkMzNjlENDIyODA0NjN..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             ) : (
               <></>
             )}
 
             {instanceType === enumInstanceType.xmc ? (
               <>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instance Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="MySite Authoring" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="graphQlEndpoint"
@@ -162,19 +240,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                 />
               </>
             ) : (
-              <FormField
-                control={form.control}
-                name="apiToken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>API Key</FormLabel>
-                    <FormControl>
-                      <Input placeholder="api-key-xxxxx" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <></>
             )}
 
             <DialogFooter>

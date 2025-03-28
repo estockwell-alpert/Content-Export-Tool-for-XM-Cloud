@@ -10,7 +10,7 @@ export const InstanceStats: React.FC = () => {
   const [instances, setInstances] = useState<IInstance[]>([]);
 
   useEffect(() => {
-    const savedInstances = sessionStorage.getItem('instances');
+    const savedInstances = localStorage.getItem('instances');
     if (savedInstances) {
       try {
         setInstances(JSON.parse(savedInstances));

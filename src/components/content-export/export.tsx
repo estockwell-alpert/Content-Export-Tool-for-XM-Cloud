@@ -117,7 +117,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('settings');
+      const saved = localStorage.getItem('settings');
       if (saved) {
         const parsedSettings = JSON.parse(saved) as ISettings[];
         setSavedSettings(parsedSettings);
@@ -143,7 +143,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     const updatedSavedSettings = [...filteredSettings, settings];
 
     setSavedSettings(updatedSavedSettings);
-    sessionStorage.setItem('settings', JSON.stringify(updatedSavedSettings));
+    localStorage.setItem('settings', JSON.stringify(updatedSavedSettings));
 
     setIsModalOpen(false);
   };
