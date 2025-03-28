@@ -65,7 +65,9 @@ export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete }) => 
                 <TableRow key={instance.id}>
                   <TableCell className="font-medium">{instance.name}</TableCell>
                   <TableCell>
-                    <Badge className="bg-gray-500">{instance.instanceType as enumInstanceType}</Badge>
+                    <Badge className="bg-gray-500">
+                      {instance.instanceType === enumInstanceType.gql ? 'GQL' : 'Authoring'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">{instance.graphQlEndpoint}</div>

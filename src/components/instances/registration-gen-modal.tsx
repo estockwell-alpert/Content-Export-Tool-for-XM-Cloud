@@ -20,13 +20,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  identityServerUrl: z.string().url({ message: 'Please enter a valid URL' }),
-  sitecoreUsername: z.string().min(2, { message: 'Username must be at least 2 characters' }),
-  sitecorePassword: z.string().min(1, { message: 'Password must be at least 5 characters' }),
+  identityServerUrl: z.string(),
+  sitecoreUsername: z.string(),
+  sitecorePassword: z.string(),
   clientId: z.string().min(2, { message: 'Client ID must be at least 2 characters' }),
   clientSecret: z.string().min(2, { message: 'Client Secret must be at least 2 characters' }),
   graphQlEndpoint: z.string().url({ message: 'Please enter a valid URL' }),
-  apiToken: z.string().min(5, { message: 'API token must be at least 5 characters' }),
   instanceType: z.nativeEnum(enumInstanceType, { message: 'Please select an instance type' }),
 });
 
@@ -49,7 +48,6 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
       clientId: '',
       clientSecret: '',
       graphQlEndpoint: '',
-      apiToken: '',
       instanceType: enumInstanceType.xmc,
     },
   });
@@ -67,19 +65,21 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
           values.identityServerUrl,
           values.sitecoreUsername,
           values.sitecorePassword,
-          values.clientId
+          values.clientId,
+          values.clientSecret
         );
-
-        console.log(tokenResponse);
-
-        onSubmit({
-          name: values.name,
-          graphQlEndpoint: values.graphQlEndpoint,
-          instanceType: values.instanceType,
-          apiToken: tokenResponse.access_token,
-          expiration: new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString(),
-        });
       }
+
+      console.log(tokenResponse);
+
+      onSubmit({
+        name: values.name,
+        graphQlEndpoint: values.graphQlEndpoint,
+        instanceType: values.instanceType,
+        apiToken: tokenResponse.access_token,
+        expiration: new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString(),
+      });
+
       form.reset();
     } catch (error) {
       console.error(error);
