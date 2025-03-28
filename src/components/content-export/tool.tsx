@@ -2,25 +2,30 @@
 import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ExportTool } from './export';
 import { ImportTool } from './import';
 
 interface ContentTransferToolProps {
   instances: IInstance[];
-  isExportOpen: boolean;
+  isExport: boolean;
 }
 
-export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, isExportOpen }) => {
+export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, isExport }) => {
   const [activeInstance, setActiveInstance] = useState<IInstance | undefined>();
   const [configurationOpen, setConfigurationOpen] = useState<boolean>(true);
-  const [exportOpen, setExportOpen] = useState<boolean>(isExportOpen);
+  const [exportOpen, setExportOpen] = useState<boolean>(isExport);
+
+  useEffect(() => {
+    console.log(instances);
+    if (instances.length === 1) {
+      setActiveInstance(instances[0]);
+    }
+  }, [instances]);
 
   const handleInstanceSelect = (value: string) => {
-    console.log('hello');
     const instance = instances.find((instance) => instance.name === value);
     setActiveInstance(
       instance ?? {
@@ -33,14 +38,14 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
         id: '',
       }
     );
-
-    console.log(instance);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Content Export Tool</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {isExport ? 'Content Export Tool' : 'Content Import Tool'}
+        </h1>
       </div>
 
       {/* Loading Modal */}
@@ -62,7 +67,10 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
                 {instances && instances.length > 0 && (
                   <>
                     <div className="flex flex-col space-y-4">
-                      <Select onValueChange={handleInstanceSelect}>
+                      <Select
+                        onValueChange={handleInstanceSelect}
+                        defaultValue={instances.length === 1 ? instances[0].name : ''}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select an instance" />
                         </SelectTrigger>
@@ -101,24 +109,12 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
       </div>
       <br />
 
-      {activeInstance && (
-        <Tabs defaultValue={isExportOpen ? 'export' : 'import'} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 border-b border-border">
-            <TabsTrigger value="export" className="">
-              Export
-            </TabsTrigger>
-            <TabsTrigger value="import" className="">
-              Import
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="import" className="pt-6">
-            <ImportTool activeInstance={activeInstance} />
-          </TabsContent>
-          <TabsContent value="export" className="pt-6">
-            <ExportTool activeInstance={activeInstance} setExportOpen={setExportOpen} exportOpen={exportOpen} />
-          </TabsContent>
-        </Tabs>
-      )}
+      {activeInstance &&
+        (exportOpen ? (
+          <ExportTool activeInstance={activeInstance} setExportOpen={setExportOpen} exportOpen={exportOpen} />
+        ) : (
+          <ImportTool activeInstance={activeInstance} />
+        ))}
     </div>
   );
 };
