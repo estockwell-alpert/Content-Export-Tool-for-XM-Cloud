@@ -60,8 +60,8 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
         <DialogHeader>
           <DialogTitle>Register New Instance</DialogTitle>
           <DialogDescription>
-            The Authoring form assumes you've manually generated an Authorization token. To generate an Authorization
-            token automatically, use the Generate Token button.
+            The Authoring form assumes you already have an Authorization token. To generate an Authorization token, use
+            the Generate Token form.
           </DialogDescription>
         </DialogHeader>
 
@@ -251,7 +251,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
             </DialogFooter>
 
             <DialogDescription>
-              To create a Content API endpoint, enter a GraphQL content API endpoint (e.g.
+              To register a Content API endpoint, enter a GraphQL content API endpoint (e.g.
               https://mysite.com/sitecore/api/graph/items/master or https://edge.sitecorecloud.io/api/graphql/v1) and
               your{' '}
               <a
@@ -262,7 +262,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
               </a>{' '}
               e.g. A9123800-72E8-4182-9567-D5C35C7D3A93
               <br /> <br />
-              To create an Authoring endpoint, enter a GraphQL authoring API endpoint e.g.
+              To register an Authoring endpoint, enter a GraphQL authoring API endpoint e.g.
               https://mysite.com/sitecore/api/authoring/graphql/v1/ and your{' '}
               <a
                 target="_blank"
