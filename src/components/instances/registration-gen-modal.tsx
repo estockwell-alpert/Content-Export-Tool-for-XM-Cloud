@@ -14,6 +14,7 @@ import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { getAccessToken } from '@/services/sitecore/generateAccessToken';
 import { getXmCloudToken } from '@/services/sitecore/getXmCloudToken';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -52,11 +53,13 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
     },
   });
 
+  const [hasError, setHasError] = useState<boolean>(false);
+
   const instanceType = form.watch('instanceType');
 
   const handleSubmit = async (values: FormValues) => {
-    console.log('Handle submit');
     try {
+      setHasError(false);
       let tokenResponse;
       if (instanceType === enumInstanceType.xmc) {
         tokenResponse = await getXmCloudToken(values.clientId, values.clientSecret);
@@ -70,8 +73,6 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
         );
       }
 
-      console.log(tokenResponse);
-
       onSubmit({
         name: values.name,
         graphQlEndpoint: values.graphQlEndpoint,
@@ -83,6 +84,7 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
       form.reset();
     } catch (error) {
       console.error(error);
+      setHasError(true);
     }
   };
 
@@ -220,7 +222,12 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
                 </FormItem>
               )}
             />
-
+            {hasError && (
+              <DialogDescription className="error">
+                An error occurred in the token request. Things to check: username and password; Client ID and Client
+                Secret; Identity Server URL is publicly accessible; Token request works in Postman
+              </DialogDescription>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
