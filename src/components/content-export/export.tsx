@@ -24,11 +24,23 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
+  const [errorStartItem, setErrorStartItem] = useState<boolean>(false);
+  const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!validateGuid(event.target.value ?? '')) {
+      setErrorStartItem(true);
+    } else {
+      setErrorStartItem(false);
+    }
     setStartItem(event.target.value);
   };
   const handleTemplates = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!validateGuid(event.target.value ?? '')) {
+      setErrorTemplates(true);
+    } else {
+      setErrorTemplates(false);
+    }
     setTemplates(event.target.value);
   };
   const handleFields = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -36,6 +48,24 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
   const handleTemplateNames = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTemplateNames(event.target.value);
+  };
+
+  const validateGuid = (value: string) => {
+    const regex = /^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}\}?$/i;
+
+    var values = value.split(',');
+    for (var i = 0; i < values.length; i++) {
+      var val = values[i].trim();
+
+      if (!val || val === '') continue;
+
+      if (!val.match(regex)) {
+        console.log(val + ' is not a valid guid');
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const runExport = async () => {
@@ -212,8 +242,15 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 value={startItem}
                 onChange={handleStartItem}
                 placeholder="e.g. {D4D93D21-A8B4-4C0F-8025-251A38D9A04D}"
-                className="font-mono text-sm"
+                className={'font-mono text-sm ' + (errorStartItem ? 'error' : '')}
               />
+              {errorStartItem && (
+                <Alert variant="default" className="mt-2">
+                  <AlertDescription className="text-xs error">
+                    Invalid start item. Start items must be entered as GUID IDs
+                  </AlertDescription>
+                </Alert>
+              )}
               <Alert variant="default" className="mt-2">
                 <AlertDescription className="text-xs">
                   Enter GUIDs of starting nodes separated by commas. Only content beneath these nodes will be exported.
@@ -233,8 +270,15 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 value={templates}
                 onChange={handleTemplates}
                 placeholder="e.g. {CC92A3D8-105C-4016-8BD7-22162C1ED919}"
-                className="font-mono text-sm"
+                className={'font-mono text-sm ' + (errorTemplates ? 'error' : '')}
               />
+              {errorTemplates && (
+                <Alert variant="default" className="mt-2">
+                  <AlertDescription className="text-xs error">
+                    Invalid template. Templates must be entered as GUID IDs
+                  </AlertDescription>
+                </Alert>
+              )}
               <Alert variant="default" className="mt-2">
                 <AlertDescription className="text-xs">
                   Enter template GUIDs separated by commas. Leave blank to include all templates.

@@ -194,3 +194,13 @@ a.disabled {
 .error {
   color: red;
 }
+
+textarea.error {
+  border-color: red;
+  background-color: rgba(255, 0, 0, 0.1);
+  color: black;
+}
+
+textarea.error:focus {
+  --tw-ring-color: color-mix(in oklab, red 50%, transparent);
+}
