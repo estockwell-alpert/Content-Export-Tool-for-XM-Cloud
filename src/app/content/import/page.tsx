@@ -11,7 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { IInstance } from '@/models/IInstance';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { Separator } from '@radix-ui/react-separator';
 import { useEffect, useState } from 'react';
 
@@ -19,13 +19,15 @@ export default function ContentExportPage() {
   const [instances, setInstances] = useState<IInstance[]>([]);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('instances');
+    const saved = localStorage.getItem('instances');
     if (saved) {
       try {
-        const parsedInstances = JSON.parse(saved);
+        const parsedInstances = JSON.parse(saved).filter(
+          (i: { instanceType: enumInstanceType }) => i.instanceType !== enumInstanceType.gql
+        );
         setInstances(parsedInstances);
       } catch (error) {
-        console.error('Error parsing instances from sessionStorage:', error);
+        console.error('Error parsing instances from localStorage:', error);
       }
     }
   }, []);
@@ -45,7 +47,7 @@ export default function ContentExportPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Content Export Tool</BreadcrumbPage>
+                  <BreadcrumbPage>Content Import Tool</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -55,7 +57,7 @@ export default function ContentExportPage() {
         <div className="container mx-auto py-6 px-4">
           <div className="border bg-card text-card-foreground shadow-sm">
             <div className="p-6">
-              <ContentTransferTool instances={instances} isExportOpen={false} />
+              <ContentTransferTool instances={instances} isExport={false} />
             </div>
           </div>
         </div>

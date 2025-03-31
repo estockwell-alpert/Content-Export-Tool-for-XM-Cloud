@@ -2,23 +2,15 @@ export const getAccessToken = async (
   identityServerUrl: string,
   username: string,
   password: string,
-  clientId: string
+  clientId: string,
+  clientSecret: string
 ) => {
-  const params = new URLSearchParams({
-    grant_type: 'password',
-    username: `sitecore\\${username}`,
-    password: password,
-    client_id: clientId,
-    scope: 'openid sitecore.profile sitecore.profile.api',
-  });
-
-  const response = await fetch(`${identityServerUrl}/connect/token`, {
+  const response = await fetch('/api/auth/xp', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
-    body: params.toString(),
+    body: JSON.stringify({ clientId, clientSecret, username, password, identityServerUrl }),
   });
 
   if (!response.ok) {

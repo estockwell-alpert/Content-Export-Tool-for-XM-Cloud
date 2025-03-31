@@ -10,6 +10,8 @@ export interface IInstance {
 }
 
 export enum enumInstanceType {
-  xmc = 'XM Cloud',
-  xp = 'XP/XM',
+  xmc = 'XMC Authoring',
+  xpauth = 'XP Authoring',
+  auth = 'Authoring',
+  gql = 'GQL',
 }

@@ -1,0 +1,2 @@
+1. Fix Exporting with commas and quotes (stupid rich text fields)
+2. Add validation to export fields - check that values are Guids e.g.

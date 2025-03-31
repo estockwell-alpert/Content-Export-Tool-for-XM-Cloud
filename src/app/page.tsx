@@ -15,13 +15,13 @@ export default function Home() {
   const [instances, setInstances] = useState<IInstance[]>([]);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('instances');
+    const saved = localStorage.getItem('instances');
     if (saved) {
       try {
         const parsedInstances = JSON.parse(saved);
         setInstances(parsedInstances);
       } catch (error) {
-        console.error('Error parsing instances from sessionStorage:', error);
+        console.error('Error parsing instances from localStorage:', error);
       }
     }
   }, []);

@@ -190,3 +190,7 @@ a.disabled {
   pointer-events: none;
   color: #ddd;
 }
+
+.error {
+  color: red;
+}
