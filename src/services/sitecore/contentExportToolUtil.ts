@@ -76,12 +76,11 @@ export const GenerateContentExport = async (
 
         const fieldValue = result[field]?.value ?? 'n/a';
 
-        let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '\\"');
+        let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
         // double quote to escape commas
         if (cleanFieldValue.indexOf(',') > -1) {
           cleanFieldValue = '"' + cleanFieldValue + '"';
         }
-
         resultRow += (cleanFieldValue ?? 'n/a') + ',';
       }
     }
