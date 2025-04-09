@@ -38,7 +38,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      instanceType: enumInstanceType.gql,
+      instanceType: enumInstanceType.edge,
       clientId: '',
       clientSecret: '',
       graphQlEndpoint: '',
@@ -80,8 +80,8 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={enumInstanceType.gql}>GraphQL Endpoint (Export)</SelectItem>
-                      <SelectItem value={enumInstanceType.auth}>Authoring Endpoint (Import)</SelectItem>
+                      <SelectItem value={enumInstanceType.edge}>Edge Endpoint (Export Only)</SelectItem>
+                      <SelectItem value={enumInstanceType.auth}>Authoring Endpoint (Import and Export)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -89,7 +89,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
               )}
             />
 
-            {instanceType === enumInstanceType.gql ? (
+            {instanceType === enumInstanceType.edge ? (
               <>
                 <FormField
                   control={form.control}
@@ -184,7 +184,7 @@ export const RegistrationTokenModal = ({ open, onOpenChange, onSubmit }: Instanc
               <></>
             )}
 
-            {instanceType === enumInstanceType.xmc ? (
+            {instanceType === enumInstanceType.auth ? (
               <>
                 <FormField
                   control={form.control}

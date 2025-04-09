@@ -21,8 +21,8 @@ export const InstanceStats: React.FC = () => {
   }, []);
 
   const totalInstances = instances.length;
-  const exportCount = instances.filter((i) => i.instanceType === enumInstanceType.gql).length;
-  const authCount = instances.filter((i) => i.instanceType !== enumInstanceType.gql).length;
+  const edgeCount = instances.filter((i) => i.instanceType === enumInstanceType.edge).length;
+  const authCount = instances.filter((i) => i.instanceType !== enumInstanceType.auth).length;
 
   return (
     <Card>
@@ -33,15 +33,12 @@ export const InstanceStats: React.FC = () => {
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">GQL Instances ({exportCount})</span>
+              <span className="text-sm text-muted-foreground">Edge Instances ({edgeCount})</span>
               <span className="text-sm font-medium">
-                {totalInstances > 0 ? Math.round((exportCount / totalInstances) * 100) : 0}%
+                {totalInstances > 0 ? Math.round((edgeCount / totalInstances) * 100) : 0}%
               </span>
             </div>
-            <Progress
-              className="h-3 bg-blue-500"
-              value={totalInstances > 0 ? (exportCount / totalInstances) * 100 : 0}
-            />
+            <Progress className="h-3 bg-blue-500" value={totalInstances > 0 ? (edgeCount / totalInstances) * 100 : 0} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">

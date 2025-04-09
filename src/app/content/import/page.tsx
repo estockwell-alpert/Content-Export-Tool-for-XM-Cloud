@@ -23,7 +23,7 @@ export default function ContentExportPage() {
     if (saved) {
       try {
         const parsedInstances = JSON.parse(saved).filter(
-          (i: { instanceType: enumInstanceType }) => i.instanceType !== enumInstanceType.gql
+          (i: { instanceType: enumInstanceType }) => i.instanceType === enumInstanceType.auth
         );
         setInstances(parsedInstances);
       } catch (error) {

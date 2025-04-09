@@ -1,4 +1,4 @@
-import { IInstance } from '@/models/IInstance';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { ISettings } from '@/models/ISettings';
 import { GenerateContentExport } from '@/services/sitecore/contentExportToolUtil';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
@@ -74,7 +74,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
-    await GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
+    await GenerateContentExport(
+      activeInstance.instanceType === enumInstanceType.auth,
+      activeInstance.graphQlEndpoint,
+      activeInstance.apiToken,
+      startItem,
+      templates,
+      fields
+    );
   };
 
   const fieldIsSelected = (field: string): boolean => {
@@ -109,18 +116,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
     const query = SchemaTemplate.replace('[templatename]', templateNames.trim());
 
-    const jsonQuery = {
-      query: query,
-    };
-
-    console.log(jsonQuery);
+    console.log(query);
 
     let fieldsList = [];
 
     fetch(activeInstance.graphQlEndpoint, {
       method: 'POST',
       headers: new Headers({ sc_apikey: activeInstance.apiToken, 'content-type': 'application/json' }),
-      body: JSON.stringify(jsonQuery),
+      body: query,
     })
       .then((response) => response.json())
       .then((data) => {

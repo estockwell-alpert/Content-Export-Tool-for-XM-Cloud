@@ -1,6 +1,12 @@
-import { SearchQueryTemplate } from '@/services/sitecore/searchTemplate.query';
+import {
+  AuthoringPathFragment,
+  AuthoringSearchQueryTemplate,
+  AuthoringTemplatesFragment,
+  EdgeSearchQueryTemplate,
+} from './searchTemplate.query';
 
 export const GetSearchQuery = (
+  authoringEndpoint: boolean,
   gqlEndpoint?: string,
   gqlApiKey?: string,
   startItems?: string,
@@ -12,6 +18,53 @@ export const GetSearchQuery = (
     return 'GQL Endpoint and API Key are required. Please see Configuration section';
   }
 
+  if (authoringEndpoint) {
+    return GetAuthoringApiQuery(startItems, templates, fields, cursor);
+  } else {
+    return GetEdgeQuery(startItems, templates, fields, cursor);
+  }
+};
+
+export const GetAuthoringApiQuery = (
+  startItems?: string,
+  templates?: string,
+  fields?: string,
+  cursor?: string
+): string => {
+  let pathFragment = '';
+  if (startItems) {
+    const paths = startItems.split(',');
+    for (var i = 0; i < paths.length; i++) {
+      const path = paths[i].trim().toLowerCase().replaceAll('{', '').replaceAll('}', '').replaceAll('-', '');
+      pathFragment += AuthoringPathFragment.replace('GUID', path);
+    }
+  }
+
+  let templateFragment = '';
+  if (templates) {
+    const templateStrings = templates.split(',');
+    for (var i = 0; i < templateStrings.length; i++) {
+      const template = templateStrings[i]
+        .trim()
+        .toLowerCase()
+        .replaceAll('{', '')
+        .replaceAll('}', '')
+        .replaceAll('-', '');
+      templateFragment += AuthoringTemplatesFragment.replace('GUID', template);
+    }
+  }
+
+  let fieldsFragment = getFieldsFragment(fields);
+
+  const query = AuthoringSearchQueryTemplate.replace('pathsFragment', pathFragment)
+    .replace('templatesFragment', templateFragment)
+    .replace('fieldsFragment', fieldsFragment)
+    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
+
+  return query;
+};
+
+export const GetEdgeQuery = (startItems?: string, templates?: string, fields?: string, cursor?: string): string => {
   let pathFragment = '';
   if (startItems) {
     const paths = startItems.split(',');
@@ -44,6 +97,17 @@ export const GetSearchQuery = (
     }
   }
 
+  let fieldsFragment = getFieldsFragment(fields);
+
+  const query = EdgeSearchQueryTemplate.replace('pathsFragment', pathFragment)
+    .replace('templatesFragment', templateFragment)
+    .replace('fieldsFragment', fieldsFragment)
+    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
+
+  return query;
+};
+
+export const getFieldsFragment = (fields?: string): string => {
   let fieldsFragment = '';
   if (fields) {
     var fieldStrings = fields.split(',');
@@ -69,13 +133,7 @@ export const GetSearchQuery = (
             `;
     }
   }
-
-  const query = SearchQueryTemplate.replace('pathsFragment', pathFragment)
-    .replace('templatesFragment', templateFragment)
-    .replace('fieldsFragment', fieldsFragment)
-    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
-
-  return query;
+  return fieldsFragment;
 };
 
 export const GetAvailableFields = (templateNames: string): string[] => {
