@@ -23,6 +23,8 @@ export const GenerateContentExport = async (
     loadingModal.style.display = 'block';
   }
 
+  console.log(fields);
+
   const response = await fetch('/api/export', {
     method: 'POST',
     headers: {
@@ -36,6 +38,8 @@ export const GenerateContentExport = async (
   }
 
   const results = await response.json();
+
+  console.log(results);
 
   let csvData = [];
 
@@ -80,7 +84,7 @@ export const GenerateContentExport = async (
 
     if (fieldStrings) {
       for (var j = 0; j < fieldStrings.length; j++) {
-        const field = fieldStrings[j].trim();
+        const field = fieldStrings[j].trim().replaceAll(' ', '').replaceAll('__', '');
 
         if (fieldStrings[j].trim() === '') {
           continue;

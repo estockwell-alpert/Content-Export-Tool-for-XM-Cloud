@@ -21,6 +21,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [templates, setTemplates] = useState<string>();
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
+  const [createdDate, setCreatedDate] = useState<boolean>();
+  const [createdBy, setCreatedBy] = useState<boolean>();
+  const [updatedDate, setUpdatedDate] = useState<boolean>();
+  const [updatedBy, setUpdatedBy] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
@@ -74,13 +78,29 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
+    let itemFields = fields;
+    if (createdBy) {
+      itemFields += ',__Created By';
+    }
+    if (updatedBy) {
+      itemFields += ',__Updated By';
+    }
+    if (updatedDate) {
+      itemFields += ',__Updated';
+    }
+    if (createdDate) {
+      itemFields += ',__Created';
+    }
+
+    console.log(itemFields);
+
     await GenerateContentExport(
       activeInstance.instanceType === enumInstanceType.auth,
       activeInstance.graphQlEndpoint,
       activeInstance.apiToken,
       startItem,
       templates,
-      fields
+      itemFields
     );
   };
 
@@ -100,6 +120,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
+  // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = () => {
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
@@ -306,6 +327,32 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 className="text-sm"
               />
 
+              {/* to do: make collapsible */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Standard Fields</label>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" defaultChecked={false} onChange={() => setCreatedDate(!createdDate)} />
+                <label>Created Date</label>
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" defaultChecked={false} onChange={() => setCreatedBy(!createdBy)} />
+                <label>Created By</label>
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedDate(!updatedDate)} />
+                <label>Updated Date</label>
+              </div>
+              <div className="flex items-center">
+                {' '}
+                <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedBy(!updatedBy)} />
+                <label>Updated By</label>
+              </div>
               <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-2 mt-4">
                   <Button variant="default" size="sm" onClick={runExport}>
