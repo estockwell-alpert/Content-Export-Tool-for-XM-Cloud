@@ -7,8 +7,8 @@ export async function POST(request: Request) {
     const { gqlEndpoint, jsonQuery, authToken } = body;
 
     console.log('gqlEndpoint: ' + gqlEndpoint);
-    console.log('query: ' + jsonQuery);
     console.log('authToken: ' + authToken);
+    console.log('query: ' + jsonQuery);
 
     const response = await fetch(gqlEndpoint, {
       method: 'POST',

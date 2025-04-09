@@ -17,6 +17,14 @@ export async function POST(request: Request) {
     if (authoringEndpoint) {
       const query = GetSearchQuery(authoringEndpoint, gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
 
+      const jsonQuery = {
+        query: query,
+      };
+
+      console.log('gqlEndpoint: ' + gqlEndpoint);
+      console.log('authToken: ' + gqlApiKey);
+      console.log(JSON.stringify(jsonQuery));
+
       // currently has no iteration
       const response: any = await fetch(gqlEndpoint, {
         method: 'POST',
@@ -24,14 +32,13 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + gqlApiKey,
         },
-        body: query,
+        body: JSON.stringify(jsonQuery),
       });
-      const data = await response.json();
+      const results = await response.json();
 
-      console.log(data);
-      results = results.concat(data?.search?.results);
+      console.log(results);
 
-      return NextResponse.json(results);
+      return NextResponse.json(results?.data?.search.results);
     }
     // Edge
     else {

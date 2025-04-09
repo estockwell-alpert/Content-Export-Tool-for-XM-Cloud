@@ -37,7 +37,7 @@ export const EdgeSearchQueryTemplate = gql`
 }`;
 
 export const AuthoringSearchQueryTemplate = gql`
-  query {
+  {
     search(query: { searchStatement: { criteria: [templatesFragment, pathsFragment] } }) {
       results {
         innerItem {
