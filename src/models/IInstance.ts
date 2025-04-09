@@ -10,8 +10,6 @@ export interface IInstance {
 }
 
 export enum enumInstanceType {
-  xmc = 'XMC Authoring',
-  xpauth = 'XP Authoring',
   auth = 'Authoring',
-  gql = 'GQL',
+  edge = 'Edge',
 }

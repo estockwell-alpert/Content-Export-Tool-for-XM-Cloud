@@ -1,4 +1,4 @@
-import { IInstance } from '@/models/IInstance';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { ISettings } from '@/models/ISettings';
 import { GenerateContentExport } from '@/services/sitecore/contentExportToolUtil';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
@@ -74,7 +74,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
-    await GenerateContentExport(activeInstance.graphQlEndpoint, activeInstance.apiToken, startItem, templates, fields);
+    await GenerateContentExport(
+      activeInstance.instanceType === enumInstanceType.auth,
+      activeInstance.graphQlEndpoint,
+      activeInstance.apiToken,
+      startItem,
+      templates,
+      fields
+    );
   };
 
   const fieldIsSelected = (field: string): boolean => {

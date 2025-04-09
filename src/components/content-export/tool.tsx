@@ -31,7 +31,7 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
     setActiveInstance(
       instance ?? {
         name: '',
-        instanceType: enumInstanceType.xmc,
+        instanceType: enumInstanceType.edge,
         clientId: '',
         clientSecret: '',
         graphQlEndpoint: '',

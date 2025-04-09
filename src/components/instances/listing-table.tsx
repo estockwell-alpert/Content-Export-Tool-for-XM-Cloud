@@ -66,7 +66,7 @@ export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete }) => 
                   <TableCell className="font-medium">{instance.name}</TableCell>
                   <TableCell>
                     <Badge className="bg-gray-500">
-                      {instance.instanceType === enumInstanceType.gql ? 'GQL' : 'Authoring'}
+                      {instance.instanceType === enumInstanceType.edge ? 'Edge' : 'Authoring'}
                     </Badge>
                   </TableCell>
                   <TableCell>

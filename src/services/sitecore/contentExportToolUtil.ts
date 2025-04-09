@@ -4,6 +4,7 @@ import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
 
 export const GenerateContentExport = async (
+  authoringEndpoint: boolean,
   gqlEndpoint?: string,
   gqlApiKey?: string,
   startItem?: string,
@@ -27,7 +28,7 @@ export const GenerateContentExport = async (
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields }),
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint }),
   });
 
   if (!response.ok) {
@@ -53,7 +54,11 @@ export const GenerateContentExport = async (
   csvData.push(headerRow);
 
   for (var i = 0; i < results.length; i++) {
-    const result = results[i];
+    let result = results[i];
+
+    if (authoringEndpoint) {
+      result = result.innerItem;
+    }
 
     console.log(result);
     if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
@@ -64,7 +69,14 @@ export const GenerateContentExport = async (
       return;
     }
 
-    let resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
+    let resultRow = '';
+
+    if (authoringEndpoint) {
+      // parse differently for authoring API
+      resultRow = result.path + ',' + result.name + ',' + result.itemId + ',';
+    } else {
+      resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
+    }
 
     if (fieldStrings) {
       for (var j = 0; j < fieldStrings.length; j++) {
@@ -85,6 +97,7 @@ export const GenerateContentExport = async (
       }
     }
 
+    console.log(resultRow);
     csvData.push(resultRow);
   }
 
@@ -135,7 +148,14 @@ export const GetContentExportResults = async (
   templates?: string,
   fields?: string
 ): Promise<any | undefined> => {
-  const query = GetSearchQuery(gqlEndpoint, gqlApiKey, startItem, templates, fields);
+  const query = GetSearchQuery(
+    instanceType === enumInstanceType.auth,
+    gqlEndpoint,
+    gqlApiKey,
+    startItem,
+    templates,
+    fields
+  );
 
   console.log(query);
 
@@ -144,7 +164,7 @@ export const GetContentExportResults = async (
   }
 
   let headers = undefined;
-  if (instanceType === enumInstanceType.xmc) {
+  if (instanceType === enumInstanceType.auth) {
     headers = new Headers({ Authorization: 'Bearer ' + gqlApiKey, 'content-type': 'application/json' });
   } else {
     headers = new Headers({ sc_apikey: gqlApiKey, 'content-type': 'application/json' });

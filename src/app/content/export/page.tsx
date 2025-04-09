@@ -11,7 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { enumInstanceType, IInstance } from '@/models/IInstance';
+import { IInstance } from '@/models/IInstance';
 import { Separator } from '@radix-ui/react-separator';
 import { useEffect, useState } from 'react';
 
@@ -22,9 +22,7 @@ export default function ContentExportPage() {
     const saved = localStorage.getItem('instances');
     if (saved) {
       try {
-        const parsedInstances = JSON.parse(saved).filter(
-          (i: { instanceType: enumInstanceType }) => i.instanceType === enumInstanceType.gql
-        );
+        const parsedInstances = JSON.parse(saved);
         setInstances(parsedInstances);
       } catch (error) {
         console.error('Error parsing instances from localStorage:', error);

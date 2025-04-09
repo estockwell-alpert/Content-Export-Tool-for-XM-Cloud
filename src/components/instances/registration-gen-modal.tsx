@@ -49,7 +49,7 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
       clientId: '',
       clientSecret: '',
       graphQlEndpoint: '',
-      instanceType: enumInstanceType.xmc,
+      instanceType: enumInstanceType.auth,
     },
   });
 
@@ -61,7 +61,7 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
     try {
       setHasError(false);
       let tokenResponse;
-      if (instanceType === enumInstanceType.xmc) {
+      if (instanceType === enumInstanceType.auth) {
         tokenResponse = await getXmCloudToken(values.clientId, values.clientSecret);
       } else {
         tokenResponse = await getAccessToken(
@@ -111,8 +111,7 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={enumInstanceType.xmc}>Sitecore XM Cloud</SelectItem>
-                      <SelectItem value={enumInstanceType.xpauth}>Sitecore XP/XM</SelectItem>
+                      <SelectItem value={enumInstanceType.auth}>Sitecore XM Cloud</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -147,53 +146,6 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
                 </FormItem>
               )}
             />
-
-            {instanceType === enumInstanceType.xpauth ? (
-              <>
-                <FormField
-                  control={form.control}
-                  name="identityServerUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Identity Server URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://identity.example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="sitecoreUsername"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sitecore Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="sitecore-username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sitecorePassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sitecore Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="sitecore-password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            ) : (
-              <></>
-            )}
 
             <FormField
               control={form.control}
