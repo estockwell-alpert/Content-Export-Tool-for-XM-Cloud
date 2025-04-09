@@ -38,7 +38,7 @@ export const EdgeSearchQueryTemplate = gql`
 
 export const AuthoringSearchQueryTemplate = gql`
   {
-    search(query: { searchStatement: { criteria: [templatesFragment, pathsFragment] } }) {
+    search(query: { searchStatement: { criteria: [templatesFragment, pathsFragment] }, paging: { pageSize: 1000 } }) {
       results {
         innerItem {
           itemId

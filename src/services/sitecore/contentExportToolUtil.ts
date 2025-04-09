@@ -60,6 +60,9 @@ export const GenerateContentExport = async (
       result = result.innerItem;
     }
 
+    if (!result) continue;
+
+    console.log(i);
     console.log(result);
     if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
       alert('Something went wrong. Check the console for errors');
