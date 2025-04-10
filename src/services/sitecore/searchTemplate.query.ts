@@ -55,15 +55,19 @@ export const AuthoringSearchQueryTemplate = gql`
   }
 `;
 
-export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID" }`;
-export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID" }`;
+export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID", operator: MUST }`;
+export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID", operator: MUST }`;
 
 export const SchemaQueryTemplate = gql`
   {
     search(
       query: {
         searchStatement: {
-          criteria: [templatesFragment, pathsFragment, { criteriaType: SEARCH, field: "_language", value: "en" }]
+          criteria: [
+            templatesFragment
+            pathsFragment
+            { criteriaType: SEARCH, field: "_language", value: "en", operator: MUST }
+          ]
         }
         paging: { pageSize: 10000 }
       }

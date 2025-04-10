@@ -38,11 +38,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setStartItem(event.target.value);
   };
   const handleTemplatesStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!validateGuid(event.target.value ?? '')) {
-      setErrorTemplatesStartItem(true);
-    } else {
-      setErrorTemplatesStartItem(false);
-    }
     setTemplatesStartItem(event.target.value);
   };
   const handleTemplates = (event: React.ChangeEvent<HTMLTextAreaElement>) => {

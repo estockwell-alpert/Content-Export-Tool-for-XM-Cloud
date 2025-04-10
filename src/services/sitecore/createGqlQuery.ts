@@ -26,6 +26,7 @@ export const GetSearchQuery = (
   }
 };
 
+// NOTE: Authoring Query only currently supports ONE path and template until I figure out how to do AND(OR)
 export const GetAuthoringApiQuery = (
   startItems?: string,
   templates?: string,
