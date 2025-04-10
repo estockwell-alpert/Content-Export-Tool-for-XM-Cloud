@@ -1,6 +1,6 @@
 import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { ISettings } from '@/models/ISettings';
-import { GenerateContentExport } from '@/services/sitecore/contentExportToolUtil';
+import { GenerateContentExport, GenerateSchemaExport } from '@/services/sitecore/contentExportToolUtil';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
 import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -18,6 +18,7 @@ interface ExportToolProps {
 
 export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen, exportOpen }) => {
   const [startItem, setStartItem] = useState<string>();
+  const [templatesStartItem, setTemplatesStartItem] = useState<string>();
   const [templates, setTemplates] = useState<string>();
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
@@ -25,6 +26,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
   const [errorStartItem, setErrorStartItem] = useState<boolean>(false);
+  const [errorTemplatesStartItem, setErrorTemplatesStartItem] = useState<boolean>(false);
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -34,6 +36,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       setErrorStartItem(false);
     }
     setStartItem(event.target.value);
+  };
+  const handleTemplatesStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!validateGuid(event.target.value ?? '')) {
+      setErrorTemplatesStartItem(true);
+    } else {
+      setErrorTemplatesStartItem(false);
+    }
+    setTemplatesStartItem(event.target.value);
   };
   const handleTemplates = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validateGuid(event.target.value ?? '')) {
@@ -81,6 +91,20 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       startItem,
       templates,
       fields
+    );
+  };
+
+  const runSchemaExport = async () => {
+    if (!activeInstance || !activeInstance.name) {
+      alert('Please select an instance. If you do not have any instances, configure one now');
+      return;
+    }
+
+    await GenerateSchemaExport(
+      activeInstance.instanceType === enumInstanceType.auth,
+      activeInstance.graphQlEndpoint,
+      activeInstance.apiToken,
+      templatesStartItem
     );
   };
 
@@ -369,6 +393,57 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
           </div>
 
           <SaveSettingsModal open={isModalOpen} onOpenChange={setIsModalOpen} onSubmit={handleSaveSettings} />
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-sm border bg-card p-6">
+        <CardHeader>
+          <CardTitle>Export Schemas</CardTitle>
+          <CardDescription>Export template and field configurations</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            {/* Start Items Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Start Item(s)</label>
+                <Button variant="ghost" size="sm" onClick={() => setTemplatesStartItem('')}>
+                  Clear
+                </Button>
+              </div>
+              <Textarea
+                value={startItem}
+                onChange={handleTemplatesStartItem}
+                placeholder="e.g. {3C1715FE-6A13-4FCF-845F-DE308BA9741D}; defaults to entire Templates folder, enter subfolders to narrow it down"
+                className={'font-mono text-sm ' + (errorTemplatesStartItem ? 'error' : '')}
+              />
+              {errorTemplatesStartItem && (
+                <Alert variant="default" className="mt-2">
+                  <AlertDescription className="text-xs error">
+                    Invalid start item. Start items must be entered as GUID IDs
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Alert variant="default" className="mt-2">
+                <AlertDescription className="text-xs">
+                  Enter GUIDs of starting nodes separated by commas. Only content beneath these nodes will be exported.
+                </AlertDescription>
+              </Alert>
+            </div>
+
+            <div className="space-y-2">
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-2 mt-4">
+                  <Button variant="default" size="sm" onClick={runSchemaExport}>
+                    Run Export
+                  </Button>
+                </div>
+              </div>
+
+              <br />
+              <br />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </>

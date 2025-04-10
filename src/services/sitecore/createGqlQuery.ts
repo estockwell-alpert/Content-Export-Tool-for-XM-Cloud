@@ -3,6 +3,7 @@ import {
   AuthoringSearchQueryTemplate,
   AuthoringTemplatesFragment,
   EdgeSearchQueryTemplate,
+  SchemaQueryTemplate,
 } from './searchTemplate.query';
 
 export const GetSearchQuery = (
@@ -164,4 +165,37 @@ export const GetTemplateSchemaQuery = (template: string): string => {
         }
     }`
   );
+};
+
+export const GetSchemaQuery = (startItems?: string, templates?: string, fields?: string, cursor?: string): string => {
+  let pathFragment = '';
+  if (startItems) {
+    const paths = startItems.split(',');
+    for (var i = 0; i < paths.length; i++) {
+      const path = paths[i].trim().toLowerCase().replaceAll('{', '').replaceAll('}', '').replaceAll('-', '');
+      pathFragment += AuthoringPathFragment.replace('GUID', path);
+    }
+  }
+
+  let templateFragment = '';
+  if (templates) {
+    const templateStrings = templates.split(',');
+    for (var i = 0; i < templateStrings.length; i++) {
+      const template = templateStrings[i]
+        .trim()
+        .toLowerCase()
+        .replaceAll('{', '')
+        .replaceAll('}', '')
+        .replaceAll('-', '');
+      templateFragment += AuthoringTemplatesFragment.replace('GUID', template);
+    }
+  }
+
+  const query = SchemaQueryTemplate.replace('pathsFragment', pathFragment)
+    .replace('templatesFragment', templateFragment)
+    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
+
+  console.log(query);
+
+  return query;
 };
