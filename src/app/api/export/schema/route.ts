@@ -111,12 +111,19 @@ export async function POST(request: Request) {
             section = sections[sectionIndex];
           }
 
+          let workflow = field.workflow?.value;
+          let required = false;
+          // field.workflow?.value?.contains('{59D4EE10-627C-4FD3-A964-61A88B092CBC}')
+          if (workflow && workflow.toString().indexOf('{59D4EE10-627C-4FD3-A964-61A88B092CBC}') > -1) {
+            required = true;
+          }
+
           // update section
           let fieldObj: IField = {
-            name: field.name,
-            machineName: field.title?.value,
+            name: field.title?.value,
+            machineName: field.name,
             fieldType: field.type?.value,
-            required: false,
+            required: required,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== templateId ? field.parent?.parent?.name : '',

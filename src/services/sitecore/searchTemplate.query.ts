@@ -126,6 +126,9 @@ export const SchemaQueryTemplate = gql`
               }
             }
           }
+          workflow: field(name: "Workflow") {
+            value
+          }
           baseTemplate: field(name: "__Base template") {
             value
           }
