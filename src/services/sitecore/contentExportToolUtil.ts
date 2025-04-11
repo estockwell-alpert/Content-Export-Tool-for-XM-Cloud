@@ -1,5 +1,6 @@
-import { ITemplateSchema } from '@/app/api/export/schema/route';
+import { IField, ITemplateSchema, IWorksheetSchema } from '@/app/api/export/schema/route';
 import { enumInstanceType } from '@/models/IInstance';
+import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
 import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
@@ -410,6 +411,33 @@ export const GenerateSchemaExport = async (
   console.log(results);
   const templates = results.templates;
 
+  // CSV:
+  //const csvString = ResultsToCsv(templates);
+  // Excel:
+  ResultsToXslx(templates);
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
+
+  alert('Done - check your downloads!');
+};
+
+export const CleanFieldValue = (value: string): string => {
+  try {
+    if (!value || value == null) return '';
+    let cleanFieldValue = value.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
+    // double quote to escape commas
+    if (cleanFieldValue.indexOf(',') > -1) {
+      cleanFieldValue = '"' + cleanFieldValue + '"';
+    }
+    return cleanFieldValue;
+  } catch (ex) {
+    return '';
+  }
+};
+
+export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   let csvData = [];
 
   // first row of CSV
@@ -468,29 +496,93 @@ export const GenerateSchemaExport = async (
   element.download = 'SchemaExport.csv';
   document.body.appendChild(element); // Required for this to work in FireFox
   element.click();
-
-  if (loadingModal) {
-    loadingModal.style.display = 'none';
-  }
-
-  alert('Done - check your downloads!');
 };
 
-export const CleanFieldValue = (value: string): string => {
-  try {
-    if (!value || value == null) return '';
-    let cleanFieldValue = value.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
-    // double quote to escape commas
-    if (cleanFieldValue.indexOf(',') > -1) {
-      cleanFieldValue = '"' + cleanFieldValue + '"';
+export const ResultsToXslx = (templates: ITemplateSchema[]) => {
+  // Create Excel workbook and worksheet
+  const workbook = XLSX.utils.book_new();
+  //const worksheet = XLSX.utils?.json_to_sheet(templates);
+  //XLSX.utils.book_append_sheet(workbook, worksheet, 'Templates Schema');
+
+  const worksheets: IWorksheetSchema[] = [];
+
+  for (var i = 0; i < templates.length; i++) {
+    const template = templates[i];
+    const folder = templates[i].folder;
+
+    if (template.sections.length == 0) continue;
+
+    const worksheetIndex = worksheets.findIndex((x) => x.sheetName === folder);
+    let worksheet: IWorksheetSchema;
+    if (worksheetIndex === -1) {
+      worksheet = {
+        sheetName: folder,
+        data: [],
+      };
+    } else {
+      worksheet = worksheets[worksheetIndex];
     }
-    return cleanFieldValue;
-  } catch (ex) {
-    return '';
+
+    const templateRow: IField = {
+      template: template.templateName,
+      path: template.templatePath,
+      section: '',
+      name: '',
+      machineName: '',
+      fieldType: '',
+      defaultValue: '',
+      helpText: '',
+      inheritedFrom: '',
+    };
+
+    worksheet.data.push(templateRow);
+
+    for (var j = 0; j < template.sections.length; j++) {
+      const dataLines = template.sections[j].fields;
+      worksheet.data = worksheet.data.concat(dataLines);
+    }
+
+    // add empty line for spacing
+    worksheet.data.push([]);
+
+    console.log(worksheet.data);
+
+    // udpate worksheets list
+    if (worksheetIndex === -1) {
+      worksheets.push(worksheet);
+    } else {
+      worksheets[worksheetIndex] = worksheet;
+    }
   }
+
+  const header = [
+    [
+      'Template',
+      'Path',
+      'Section',
+      'Field Name',
+      'Machine Name',
+      'Field Type',
+      'Default Value',
+      'Help Text',
+      'Inherited From',
+      'Required',
+    ],
+  ];
+
+  // add every worksheet to file
+  for (var i = 0; i < worksheets.length; i++) {
+    const worksheet = XLSX.utils?.json_to_sheet(worksheets[i].data);
+    XLSX.utils.sheet_add_aoa(worksheet, header);
+    XLSX.utils.book_append_sheet(workbook, worksheet, worksheets[i].sheetName);
+  }
+
+  // Save the workbook as an Excel file
+  XLSX.writeFile(workbook, `${'Templates Schema'}.xlsx`);
+  console.log(`Exported data to xslx`);
 };
 
-function resultsSort(a: any, b: any) {
+export function resultsSort(a: any, b: any) {
   var templateA = a.parent?.parent?.name;
   var templateB = b.parent?.parent?.name;
   var sectionA = a.parent?.name;

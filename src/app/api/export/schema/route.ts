@@ -121,10 +121,13 @@ export async function POST(request: Request) {
 
           // update section
           let fieldObj: IField = {
+            template: '',
+            path: '',
+            section: sectionName,
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
-            required: required,
+            required: required ? true : undefined,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== templateId ? field.parent?.parent?.name : '',
@@ -159,6 +162,11 @@ export async function POST(request: Request) {
 
 export const GetFieldsForTemplate = (templateId: string) => {};
 
+export interface IWorksheetSchema {
+  sheetName: string;
+  data: any[];
+}
+
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
@@ -172,10 +180,13 @@ export interface ITemplateSection {
 }
 
 export interface IField {
+  template: string;
+  path: string;
+  section: string;
   name: string;
   machineName: string;
   fieldType: string;
-  required: boolean;
+  required?: boolean;
   defaultValue: string;
   helpText: string;
   inheritedFrom?: string;
