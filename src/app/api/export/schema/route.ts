@@ -72,6 +72,10 @@ export async function POST(request: Request) {
 
       for (var t = 0; t < templateIds.length; t++) {
         const templateId = templateIds[t];
+        if (templateId === '') {
+          console.log('Do not run empty query');
+          continue;
+        }
         console.log('Getting fields for ' + templateId);
         const allFieldsQuery = GetSchemaQuery(templateId, fieldTemplateId);
         console.log(allFieldsQuery);
@@ -117,7 +121,12 @@ export async function POST(request: Request) {
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== templateId ? field.parent?.parent?.name : '',
           };
-          section.fields.push(fieldObj);
+
+          if (section.fields.some((field) => field.name == fieldObj.name)) {
+            console.log('SECTION ALREADY CONTAINS FIELD');
+          } else {
+            section.fields.push(fieldObj);
+          }
 
           if (sectionIndex === -1) {
             sections.push(section);
