@@ -15,6 +15,11 @@ export const EdgeSearchQueryTemplate = gql`
                         pathsFragment
                     ]
                 }
+                {
+                    OR:[
+                        langFragment
+                    ]
+                }
             ]
         }
         first: 1000
@@ -84,6 +89,7 @@ export const AuthoringSearchQueryTemplate = gql`
 export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID" }`;
 export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID" }`;
 export const AuthoringLangFragment = gql`{ criteriaType: SEARCH, field: "_language", value: "CODE" }`;
+export const EdgeLangFragment = gql`{ name: "_language",  value: "CODE" },`;
 
 export const SchemaQueryTemplate = gql`
   {

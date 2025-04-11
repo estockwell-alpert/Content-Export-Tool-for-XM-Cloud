@@ -3,6 +3,7 @@ import {
   AuthoringPathFragment,
   AuthoringSearchQueryTemplate,
   AuthoringTemplatesFragment,
+  EdgeLangFragment,
   EdgeSearchQueryTemplate,
   SchemaQueryTemplate,
 } from './searchTemplate.query';
@@ -14,6 +15,7 @@ export const GetSearchQuery = (
   startItems?: string,
   templates?: string,
   fields?: string,
+  languages?: string,
   cursor?: string
 ): string => {
   if (!gqlEndpoint || !gqlApiKey) {
@@ -21,9 +23,9 @@ export const GetSearchQuery = (
   }
 
   if (authoringEndpoint) {
-    return GetAuthoringApiQuery(startItems, templates, fields, cursor);
+    return GetAuthoringApiQuery(startItems, templates, fields, languages, cursor);
   } else {
-    return GetEdgeQuery(startItems, templates, fields, cursor);
+    return GetEdgeQuery(startItems, templates, fields, languages, cursor);
   }
 };
 
@@ -78,7 +80,13 @@ export const GetAuthoringApiQuery = (
   return query;
 };
 
-export const GetEdgeQuery = (startItems?: string, templates?: string, fields?: string, cursor?: string): string => {
+export const GetEdgeQuery = (
+  startItems?: string,
+  templates?: string,
+  fields?: string,
+  languages?: string,
+  cursor?: string
+): string => {
   let pathFragment = '';
   if (startItems) {
     const paths = startItems.split(',');
@@ -113,9 +121,19 @@ export const GetEdgeQuery = (startItems?: string, templates?: string, fields?: s
 
   let fieldsFragment = getFieldsFragment(fields);
 
+  let langFragment = '';
+  if (languages) {
+    const langs = languages.split(',');
+    for (var i = 0; i < langs.length; i++) {
+      const lang = langs[i].trim().toLowerCase();
+      langFragment += EdgeLangFragment.replace('CODE', lang);
+    }
+  }
+
   const query = EdgeSearchQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
     .replace('fieldsFragment', fieldsFragment)
+    .replace('langFragment', langFragment)
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
   return query;

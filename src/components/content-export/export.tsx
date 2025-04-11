@@ -249,6 +249,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setStartItem(setting.startItem);
     setTemplates(setting.templates);
     setFields(setting.fields);
+    setLanguages(setting.languages);
     setIncludeLang(setting.includeLang);
     setIncludeTemplate(setting.includeTemplate);
     setCreatedBy(setting.createdBy);
@@ -402,27 +403,31 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setIncludeTemplate(!includeTemplate)} />
+                  <input
+                    type="checkbox"
+                    checked={includeTemplate}
+                    onChange={() => setIncludeTemplate(!includeTemplate)}
+                  />
                   <label>Template</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setIncludeLang(!includeLang)} />
+                  <input type="checkbox" checked={includeLang} onChange={() => setIncludeLang(!includeLang)} />
                   <label>Language</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setCreatedDate(!createdDate)} />
+                  <input type="checkbox" checked={createdDate} onChange={() => setCreatedDate(!createdDate)} />
                   <label>Created Date</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setCreatedBy(!createdBy)} />
+                  <input type="checkbox" checked={createdBy} onChange={() => setCreatedBy(!createdBy)} />
                   <label>Created By</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedDate(!updatedDate)} />
+                  <input type="checkbox" checked={updatedDate} onChange={() => setUpdatedDate(!updatedDate)} />
                   <label>Updated Date</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedBy(!updatedBy)} />
+                  <input type="checkbox" checked={updatedBy} onChange={() => setUpdatedBy(!updatedBy)} />
                   <label>Updated By</label>
                 </div>
                 <div className="mt-4 space-y-2">
