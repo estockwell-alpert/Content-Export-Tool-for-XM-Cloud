@@ -165,8 +165,6 @@ export async function POST(request: Request) {
   }
 }
 
-export const GetFieldsForTemplate = (templateId: string) => {};
-
 export interface IWorksheetSchema {
   sheetName: string;
   data: any[];
