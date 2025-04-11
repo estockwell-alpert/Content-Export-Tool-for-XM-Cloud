@@ -115,7 +115,7 @@ export async function POST(request: Request) {
             required: false,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
-            inheritedFrom: field.parent?.parent?.name,
+            inheritedFrom: field.parent?.parent?.itemId !== templateId ? field.parent?.parent?.name : '',
           };
           section.fields.push(fieldObj);
 
