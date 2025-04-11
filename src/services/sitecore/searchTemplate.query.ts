@@ -126,6 +126,9 @@ export const SchemaQueryTemplate = gql`
               }
             }
           }
+          baseTemplate: field(name: "__Base template") {
+            value
+          }
           type: field(name: "Type") {
             value
           }

@@ -74,9 +74,6 @@ export const GenerateContentExport = async (
     }
 
     if (!result) continue;
-
-    console.log(i);
-    console.log(result);
     if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
       alert('Something went wrong. Check the console for errors');
       if (loadingModal) {
@@ -405,72 +402,13 @@ export const GenerateSchemaExport = async (
   }
 
   const results: any[] = await response.json();
-  results.sort(resultsSort);
-
   console.log(results);
-
-  let csvData = [];
-
-  // first row of CSV
-  let headerRow = 'Path,Template,Section,Name,Machine Name,Field Type,Required,Default Value,Help Text';
-  csvData.push(headerRow);
-
-  for (var i = 0; i < results.length; i++) {
-    let result = results[i]?.innerItem;
-
-    if (!result) continue;
-
-    if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
-      alert('Something went wrong. Check the console for errors');
-      if (loadingModal) {
-        loadingModal.style.display = 'none';
-      }
-      return;
-    }
-
-    const path = result.path;
-    const template = result.parent?.parent?.name;
-    const section = result.parent?.name;
-    const name = result.name;
-    const displayName = result.title?.value;
-    const fieldType = result.type?.value;
-    const required = '';
-    const helpText = result.helpText?.value;
-    const defaultValue = result.defaultValue?.value;
-
-    let resultRow = '';
-
-    resultRow += path + ',';
-    resultRow += CleanFieldValue(template) + ',';
-    resultRow += CleanFieldValue(section) + ',';
-    resultRow += CleanFieldValue(name) + ',';
-    resultRow += CleanFieldValue(displayName) + ',';
-    resultRow += CleanFieldValue(fieldType) + ',';
-    resultRow += CleanFieldValue(required) + ',';
-    resultRow += CleanFieldValue(defaultValue) + ',';
-    resultRow += CleanFieldValue(helpText) + ',';
-
-    console.log(resultRow);
-    csvData.push(resultRow);
-  }
-
-  let csvString = '';
-  for (let i = 0; i < csvData.length; i++) {
-    csvString += csvData[i] + '\n';
-  }
-
-  const element = document.createElement('a');
-  const file = new Blob([csvString], { type: 'text/csv' });
-  element.href = URL.createObjectURL(file);
-  element.download = 'SchemaExport.csv';
-  document.body.appendChild(element); // Required for this to work in FireFox
-  element.click();
 
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
 
-  alert('Done - check your downloads!');
+  //alert('Done - check your downloads!');
 };
 
 export const CleanFieldValue = (value: string): string => {
