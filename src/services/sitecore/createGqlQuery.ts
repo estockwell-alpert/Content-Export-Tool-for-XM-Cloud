@@ -229,7 +229,5 @@ export const GetSchemaQuery = (startItems?: string, templates?: string, fields?:
     .replace('langFragment', 'en')
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
-  console.log(query);
-
   return query;
 };

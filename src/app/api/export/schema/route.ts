@@ -79,7 +79,6 @@ export async function POST(request: Request) {
         }
         console.log('Getting fields for ' + templateId);
         const allFieldsQuery = GetSchemaQuery(templateId, fieldTemplateId);
-        console.log(allFieldsQuery);
         let fieldsQuery = {
           query: allFieldsQuery,
         };
@@ -96,9 +95,13 @@ export async function POST(request: Request) {
         const fieldResults = await fieldsResponse.json();
 
         const fieldsJson = fieldResults?.data?.search?.results;
+        console.log(JSON.stringify(fieldsJson));
 
         for (var f = 0; f < fieldsJson.length; f++) {
           const field = fieldsJson[f].innerItem;
+
+          console.log('');
+          console.log('Field ' + f + ': ' + field.name);
 
           var sectionName = field?.parent?.name;
           const sectionIndex = sections.findIndex((x) => x.name === sectionName);
@@ -119,6 +122,8 @@ export async function POST(request: Request) {
             required = true;
           }
 
+          console.log('Current template: ' + templateId);
+
           // update section
           let fieldObj: IField = {
             template: '',
@@ -130,7 +135,7 @@ export async function POST(request: Request) {
             required: required ? true : undefined,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
-            inheritedFrom: field.parent?.parent?.itemId !== templateId ? field.parent?.parent?.name : '',
+            inheritedFrom: field.parent?.parent?.itemId !== template.itemId ? field.parent?.parent?.name : '',
           };
 
           if (section.fields.some((field) => field.name == fieldObj.name)) {
