@@ -27,6 +27,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [createdBy, setCreatedBy] = useState<boolean>();
   const [updatedDate, setUpdatedDate] = useState<boolean>();
   const [updatedBy, setUpdatedBy] = useState<boolean>();
+  const [includeTemplate, setIncludeTemplate] = useState<boolean>();
+  const [includeLang, setIncludeLang] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
@@ -110,7 +112,9 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       startItem,
       templates,
       itemFields,
-      languages
+      languages,
+      includeTemplate,
+      includeLang
     );
   };
 
@@ -214,6 +218,12 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       fields: fields ?? '',
       languages: languages ?? '',
       schemaStartItem: templatesStartItem ?? '',
+      includeLang: includeLang,
+      includeTemplate: includeTemplate,
+      createdBy: createdBy,
+      createdDate: createdDate,
+      updatedBy: updatedBy,
+      updatedDate: updatedDate,
     };
 
     // check if setting with name already exists
@@ -239,6 +249,12 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setStartItem(setting.startItem);
     setTemplates(setting.templates);
     setFields(setting.fields);
+    setIncludeLang(setting.includeLang);
+    setIncludeTemplate(setting.includeTemplate);
+    setCreatedBy(setting.createdBy);
+    setCreatedDate(setting.createdDate);
+    setUpdatedBy(setting.updatedBy);
+    setUpdatedDate(setting.updatedDate);
   };
 
   return (
@@ -385,20 +401,27 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked={false} onChange={() => setIncludeTemplate(!includeTemplate)} />
+                  <label>Template</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked={false} onChange={() => setIncludeLang(!includeLang)} />
+                  <label>Language</label>
+                </div>
+                <div className="flex items-center gap-2">
                   <input type="checkbox" defaultChecked={false} onChange={() => setCreatedDate(!createdDate)} />
                   <label>Created Date</label>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <input type="checkbox" defaultChecked={false} onChange={() => setCreatedBy(!createdBy)} />
                   <label>Created By</label>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedDate(!updatedDate)} />
                   <label>Updated Date</label>
                 </div>
-                <div className="flex items-center">
-                  {' '}
+                <div className="flex items-center gap-2">
                   <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedBy(!updatedBy)} />
                   <label>Updated By</label>
                 </div>

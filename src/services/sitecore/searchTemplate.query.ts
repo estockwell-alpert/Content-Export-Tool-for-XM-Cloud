@@ -28,6 +28,13 @@ export const EdgeSearchQueryTemplate = gql`
         results {
             name
             id
+            template {
+              name
+              id
+            }
+            language {
+              name
+            }
             url {
                 path
             }
@@ -63,6 +70,9 @@ export const AuthoringSearchQueryTemplate = gql`
           template {
             name
             templateId
+          }
+          language {
+            name
           }
           fieldsFragment
         }

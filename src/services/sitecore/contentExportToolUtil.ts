@@ -10,7 +10,9 @@ export const GenerateContentExport = async (
   startItem?: string,
   templates?: string,
   fields?: string,
-  languages?: string
+  languages?: string,
+  includeTemplate?: boolean,
+  includeLang?: boolean
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -47,6 +49,12 @@ export const GenerateContentExport = async (
   // first row of CSV
   const fieldStrings = fields?.split(',');
   let headerRow = 'Item Path,Name,ID,';
+  if (includeTemplate) {
+    headerRow += 'Template,';
+  }
+  if (includeLang) {
+    headerRow += 'Language,';
+  }
   if (fieldStrings) {
     for (var i = 0; i < fieldStrings.length; i++) {
       if (fieldStrings[i].trim() === '') {
@@ -84,6 +92,13 @@ export const GenerateContentExport = async (
       resultRow = result.path + ',' + result.name + ',' + result.itemId + ',';
     } else {
       resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
+    }
+
+    if (includeTemplate) {
+      resultRow += result.template?.name + ',';
+    }
+    if (includeLang) {
+      resultRow += result.language?.name + ',';
     }
 
     if (fieldStrings) {
