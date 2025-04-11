@@ -508,7 +508,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
               {/* Start Items Section */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Start Item(s)</label>
+                  <label className="text-sm font-medium">Start Item</label>
                   <Button variant="ghost" size="sm" onClick={() => setTemplatesStartItem('')}>
                     Clear
                   </Button>

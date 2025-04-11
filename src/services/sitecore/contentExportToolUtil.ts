@@ -1,3 +1,4 @@
+import { ITemplateSchema } from '@/app/api/export/schema/route';
 import { enumInstanceType } from '@/models/IInstance';
 import { GetSearchQuery } from './createGqlQuery';
 import { postToAuthApi } from './postToAuthApi';
@@ -74,6 +75,9 @@ export const GenerateContentExport = async (
     }
 
     if (!result) continue;
+
+    console.log(i);
+    console.log(result);
     if (typeof result === 'string' && result.indexOf('GqlApiError:Error') > -1) {
       alert('Something went wrong. Check the console for errors');
       if (loadingModal) {
@@ -401,14 +405,73 @@ export const GenerateSchemaExport = async (
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const results: any[] = await response.json();
+  const results: any = await response.json();
+
   console.log(results);
+  const templates = results.templates;
+
+  let csvData = [];
+
+  // first row of CSV
+  let headerRow = 'Template,Path,Section,Name,Machine Name,Field Type,Required,Default Value,Help Text,Inherited From';
+  csvData.push(headerRow);
+
+  for (var i = 0; i < templates.length; i++) {
+    let template: ITemplateSchema = templates[i];
+
+    csvData.push(template.templateName + ',' + template.templatePath);
+
+    for (var j = 0; j < template.sections.length; j++) {
+      var section = template.sections[j];
+
+      const sectionName = section.name;
+
+      for (var k = 0; k < section.fields.length; k++) {
+        const field = section.fields[k];
+        const name = field.name;
+        const machineName = field.machineName;
+        const fieldType = field.fieldType;
+        const required = '';
+        const helpText = field.helpText;
+        const defaultValue = field.defaultValue;
+        const inheritedFrom = field.inheritedFrom;
+
+        let resultRow = '';
+
+        resultRow += ',,';
+        resultRow += CleanFieldValue(sectionName) + ',';
+        resultRow += name + ',';
+        resultRow += CleanFieldValue(machineName) + ',';
+        resultRow += fieldType + ',';
+        resultRow += required + ',';
+        resultRow += CleanFieldValue(defaultValue) + ',';
+        resultRow += CleanFieldValue(helpText) + ',';
+        resultRow += inheritedFrom;
+
+        console.log(resultRow);
+        csvData.push(resultRow);
+      }
+    }
+    csvData.push('');
+  }
+
+  let csvString = '';
+  for (let i = 0; i < csvData.length; i++) {
+    csvString += csvData[i] + '\n';
+  }
+
+  const element = document.createElement('a');
+  const file = new Blob([csvString], { type: 'text/csv' });
+  element.href = URL.createObjectURL(file);
+  element.download = 'SchemaExport.csv';
+  document.body.appendChild(element); // Required for this to work in FireFox
+  element.click();
 
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
 
-  //alert('Done - check your downloads!');
+  alert('Done - check your downloads!');
 };
 
 export const CleanFieldValue = (value: string): string => {
