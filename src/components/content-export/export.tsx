@@ -22,6 +22,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [templates, setTemplates] = useState<string>();
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
+  const [languages, setLanguages] = useState<string>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
@@ -50,6 +51,9 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
   const handleFields = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFields(event.target.value);
+  };
+  const handleLanguages = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLanguages(event.target.value);
   };
   const handleTemplateNames = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTemplateNames(event.target.value);
@@ -85,7 +89,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       activeInstance.apiToken,
       startItem,
       templates,
-      fields
+      fields,
+      languages
     );
   };
 
@@ -186,6 +191,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       startItem: startItem ?? '',
       templates: templates ?? '',
       fields: fields ?? '',
+      languages: languages ?? '',
+      schemaStartItem: templatesStartItem ?? '',
     };
 
     // check if setting with name already exists
@@ -324,6 +331,17 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 placeholder="e.g. title, image, taxonomies"
                 className="text-sm"
               />
+
+              {/* Languages -- eventually replace with a dropdown connected to a GQL language query */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Language</label>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setLanguages('')}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              <Textarea value={languages} onChange={handleLanguages} placeholder="e.g. en, es-MX" className="text-sm" />
 
               <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-2 mt-4">

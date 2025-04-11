@@ -1,4 +1,5 @@
 import {
+  AuthoringLangFragment,
   AuthoringPathFragment,
   AuthoringSearchQueryTemplate,
   AuthoringTemplatesFragment,
@@ -31,6 +32,7 @@ export const GetAuthoringApiQuery = (
   startItems?: string,
   templates?: string,
   fields?: string,
+  languages?: string,
   cursor?: string
 ): string => {
   let pathFragment = '';
@@ -56,11 +58,21 @@ export const GetAuthoringApiQuery = (
     }
   }
 
+  let langFragment = '';
+  if (languages) {
+    const langs = languages.split(',');
+    for (var i = 0; i < langs.length; i++) {
+      const lang = langs[i].trim().toLowerCase();
+      langFragment += AuthoringLangFragment.replace('CODE', lang);
+    }
+  }
+
   let fieldsFragment = getFieldsFragment(fields);
 
   const query = AuthoringSearchQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
     .replace('fieldsFragment', fieldsFragment)
+    .replace('langFragment', langFragment)
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
   return query;
@@ -194,6 +206,7 @@ export const GetSchemaQuery = (startItems?: string, templates?: string, fields?:
 
   const query = SchemaQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
+    .replace('langFragment', 'en')
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
   console.log(query);

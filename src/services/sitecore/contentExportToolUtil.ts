@@ -9,7 +9,8 @@ export const GenerateContentExport = async (
   gqlApiKey?: string,
   startItem?: string,
   templates?: string,
-  fields?: string
+  fields?: string,
+  languages?: string
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -28,7 +29,7 @@ export const GenerateContentExport = async (
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint }),
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, languages, authoringEndpoint }),
   });
 
   if (!response.ok) {
@@ -149,7 +150,8 @@ export const GetContentExportResults = async (
   gqlApiKey?: string,
   startItem?: string,
   templates?: string,
-  fields?: string
+  fields?: string,
+  languages?: string
 ): Promise<any | undefined> => {
   const query = GetSearchQuery(
     instanceType === enumInstanceType.auth,
@@ -157,7 +159,8 @@ export const GetContentExportResults = async (
     gqlApiKey,
     startItem,
     templates,
-    fields
+    fields,
+    languages
   );
 
   console.log(query);

@@ -38,7 +38,23 @@ export const EdgeSearchQueryTemplate = gql`
 
 export const AuthoringSearchQueryTemplate = gql`
   {
-    search(query: { searchStatement: { criteria: [templatesFragment, pathsFragment] }, paging: { pageSize: 1000 } }) {
+    search(
+      query: {
+        searchStatement: {
+          operator: MUST
+          subStatements: {
+            criteria: [pathsFragment]
+            operator: MUST
+            subStatements: {
+              criteria: [templatesFragment]
+              operator: MUST
+              subStatements: { criteria: [langFragment], operator: MUST }
+            }
+          }
+        }
+        paging: { pageSize: 1000 }
+      }
+    ) {
       results {
         innerItem {
           itemId
@@ -55,19 +71,22 @@ export const AuthoringSearchQueryTemplate = gql`
   }
 `;
 
-export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID", operator: MUST }`;
-export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID", operator: MUST }`;
+export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID" }`;
+export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID" }`;
+export const AuthoringLangFragment = gql`{ criteriaType: SEARCH, field: "_language", value: "CODE" }`;
 
 export const SchemaQueryTemplate = gql`
   {
     search(
       query: {
         searchStatement: {
-          criteria: [
-            templatesFragment
-            pathsFragment
-            { criteriaType: SEARCH, field: "_language", value: "en", operator: MUST }
-          ]
+          criteria: [{ criteriaType: SEARCH, field: "_language", value: "langFragment", operator: MUST }]
+          operator: MUST
+          subStatements: {
+            criteria: [pathsFragment]
+            operator: MUST
+            subStatements: { criteria: [templatesFragment], operator: MUST }
+          }
         }
         paging: { pageSize: 10000 }
       }

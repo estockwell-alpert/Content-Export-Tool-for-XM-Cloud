@@ -4,4 +4,6 @@ export interface ISettings {
   startItem?: string;
   templates?: string;
   fields?: string;
+  languages?: string;
+  schemaStartItem?: string;
 }
