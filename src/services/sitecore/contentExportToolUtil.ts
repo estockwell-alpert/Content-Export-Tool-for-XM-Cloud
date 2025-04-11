@@ -419,6 +419,8 @@ export const GenerateSchemaExport = async (
   for (var i = 0; i < templates.length; i++) {
     let template: ITemplateSchema = templates[i];
 
+    if (template.sections.length === 0) continue;
+
     csvData.push(template.templateName + ',' + template.templatePath);
 
     for (var j = 0; j < template.sections.length; j++) {
