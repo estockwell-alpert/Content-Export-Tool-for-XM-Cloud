@@ -23,6 +23,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
   const [languages, setLanguages] = useState<string>();
+  const [createdDate, setCreatedDate] = useState<boolean>();
+  const [createdBy, setCreatedBy] = useState<boolean>();
+  const [updatedDate, setUpdatedDate] = useState<boolean>();
+  const [updatedBy, setUpdatedBy] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savedSettings, setSavedSettings] = useState<ISettings[]>([]);
   const [availableFields, setAvailableFields] = useState<string[]>();
@@ -83,13 +87,29 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
+    let itemFields = fields;
+    if (createdBy) {
+      itemFields += ',__Created By';
+    }
+    if (updatedBy) {
+      itemFields += ',__Updated By';
+    }
+    if (updatedDate) {
+      itemFields += ',__Updated';
+    }
+    if (createdDate) {
+      itemFields += ',__Created';
+    }
+
+    console.log(itemFields);
+
     await GenerateContentExport(
       activeInstance.instanceType === enumInstanceType.auth,
       activeInstance.graphQlEndpoint,
       activeInstance.apiToken,
       startItem,
       templates,
-      fields,
+      itemFields,
       languages
     );
   };
@@ -124,6 +144,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
+  // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = () => {
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
@@ -259,110 +280,89 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            {/* Start Items Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Start Item(s)</label>
-                <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
-                  Clear
-                </Button>
-              </div>
-              <Textarea
-                value={startItem}
-                onChange={handleStartItem}
-                placeholder="e.g. {D4D93D21-A8B4-4C0F-8025-251A38D9A04D}"
-                className={'font-mono text-sm ' + (errorStartItem ? 'error' : '')}
-              />
-              {errorStartItem && (
-                <Alert variant="default" className="mt-2">
-                  <AlertDescription className="text-xs error">
-                    Invalid start item. Start items must be entered as GUID IDs
-                  </AlertDescription>
-                </Alert>
-              )}
-              <Alert variant="default" className="mt-2">
-                <AlertDescription className="text-xs">
-                  Enter GUIDs of starting nodes separated by commas. Only content beneath these nodes will be exported.
-                </AlertDescription>
-              </Alert>
-            </div>
-
-            {/* Templates Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Templates</label>
-                <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
-                  Clear
-                </Button>
-              </div>
-              <Textarea
-                value={templates}
-                onChange={handleTemplates}
-                placeholder="e.g. {CC92A3D8-105C-4016-8BD7-22162C1ED919}"
-                className={'font-mono text-sm ' + (errorTemplates ? 'error' : '')}
-              />
-              {errorTemplates && (
-                <Alert variant="default" className="mt-2">
-                  <AlertDescription className="text-xs error">
-                    Invalid template. Templates must be entered as GUID IDs
-                  </AlertDescription>
-                </Alert>
-              )}
-              <Alert variant="default" className="mt-2">
-                <AlertDescription className="text-xs">
-                  Enter template GUIDs separated by commas. Leave blank to include all templates.
-                </AlertDescription>
-              </Alert>
-            </div>
-
-            {/* Fields Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Fields</label>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+            <Card className="rounded-sm border bg-card p-6">
+              <CardTitle>Filters</CardTitle>
+              {/* Start Items Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Start Item(s)</label>
+                  <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
                     Clear
                   </Button>
                 </div>
+                <Textarea
+                  value={startItem}
+                  onChange={handleStartItem}
+                  placeholder="e.g. {D4D93D21-A8B4-4C0F-8025-251A38D9A04D}"
+                  className={'font-mono text-sm ' + (errorStartItem ? 'error' : '')}
+                />
+                {errorStartItem && (
+                  <Alert variant="default" className="mt-2">
+                    <AlertDescription className="text-xs error">
+                      Invalid start item. Start items must be entered as GUID IDs
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <Alert variant="default" className="mt-2">
+                  <AlertDescription className="text-xs">
+                    Enter GUIDs of starting nodes separated by commas. Only content beneath these nodes will be
+                    exported.
+                  </AlertDescription>
+                </Alert>
               </div>
-              <Textarea
-                value={fields}
-                onChange={handleFields}
-                placeholder="e.g. title, image, taxonomies"
-                className="text-sm"
-              />
+
+              {/* Templates Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Templates</label>
+                  <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
+                    Clear
+                  </Button>
+                </div>
+                <Textarea
+                  value={templates}
+                  onChange={handleTemplates}
+                  placeholder="e.g. {CC92A3D8-105C-4016-8BD7-22162C1ED919}"
+                  className={'font-mono text-sm ' + (errorTemplates ? 'error' : '')}
+                />
+                {errorTemplates && (
+                  <Alert variant="default" className="mt-2">
+                    <AlertDescription className="text-xs error">
+                      Invalid template. Templates must be entered as GUID IDs
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <Alert variant="default" className="mt-2">
+                  <AlertDescription className="text-xs">
+                    Enter template GUIDs separated by commas. Leave blank to include all templates.
+                  </AlertDescription>
+                </Alert>
+              </div>
 
               {/* Languages -- eventually replace with a dropdown connected to a GQL language query */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Language</label>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setLanguages('')}>
-                    Clear
-                  </Button>
-                </div>
-              </div>
-              <Textarea value={languages} onChange={handleLanguages} placeholder="e.g. en, es-MX" className="text-sm" />
-
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-2 mt-4">
-                  <Button variant="default" size="sm" onClick={runExport}>
-                    Run Export
-                  </Button>
-
-                  <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
-                    Save Settings
-                  </Button>
-                </div>
-              </div>
-
-              <br />
-              <br />
-
-              <div className="">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">
-                    Browse Fields - input template names below, then click button to see available fields
-                  </label>
+                  <label className="text-sm font-medium">Language</label>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setLanguages('')}>
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <Textarea
+                  value={languages}
+                  onChange={handleLanguages}
+                  placeholder="e.g. en, es-MX"
+                  className="text-sm"
+                />
+              </div>
+            </Card>
+            <Card className="rounded-sm border bg-card p-6">
+              <CardTitle>Data</CardTitle>
+              {/* Fields Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Fields</label>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => setFields('')}>
                       Clear
@@ -370,39 +370,99 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   </div>
                 </div>
                 <Textarea
-                  placeholder="e.g. Person, Whitepaper, LandingPage"
-                  onChange={handleTemplateNames}
+                  value={fields}
+                  onChange={handleFields}
+                  placeholder="e.g. title, image, taxonomies"
                   className="text-sm"
-                ></Textarea>
+                />
 
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 mt-4">
-                    <Button variant="default" size="sm" onClick={() => browseFields()}>
-                      Browse Fields
+                {/* to do: make collapsible, fix to work fully with Edge */}
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Standard Fields</label>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+                      Clear
                     </Button>
                   </div>
                 </div>
-                {availableFields && availableFields.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <label className="text-sm font-medium">Available Fields:</label>
+                <div className="flex items-center">
+                  <input type="checkbox" defaultChecked={false} onChange={() => setCreatedDate(!createdDate)} />
+                  <label>Created Date</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" defaultChecked={false} onChange={() => setCreatedBy(!createdBy)} />
+                  <label>Created By</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedDate(!updatedDate)} />
+                  <label>Updated Date</label>
+                </div>
+                <div className="flex items-center">
+                  {' '}
+                  <input type="checkbox" defaultChecked={false} onChange={() => setUpdatedBy(!updatedBy)} />
+                  <label>Updated By</label>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="default" size="sm" onClick={runExport}>
+                      Run Export
+                    </Button>
 
-                    <div className="items-center gap-2 mt-4 fieldsList">
-                      {availableFields &&
-                        availableFields.map((field, index) => (
-                          <p key={index}>
-                            <a
-                              className={fieldIsSelected(field) ? 'disabled' : ''}
-                              onDoubleClick={() => addField(field)}
-                            >
-                              {field}
-                            </a>
-                          </p>
-                        ))}
+                    <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
+                      Save Settings
+                    </Button>
+                  </div>
+                </div>
+
+                <br />
+                <br />
+
+                <div className="">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">
+                      Browse Fields - input template names below, then click button to see available fields
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+                        Clear
+                      </Button>
                     </div>
                   </div>
-                )}
+                  <Textarea
+                    placeholder="e.g. Person, Whitepaper, LandingPage"
+                    onChange={handleTemplateNames}
+                    className="text-sm"
+                  ></Textarea>
+
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2 mt-4">
+                      <Button variant="default" size="sm" onClick={() => browseFields()}>
+                        Browse Fields
+                      </Button>
+                    </div>
+                  </div>
+                  {availableFields && availableFields.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <label className="text-sm font-medium">Available Fields:</label>
+
+                      <div className="items-center gap-2 mt-4 fieldsList">
+                        {availableFields &&
+                          availableFields.map((field, index) => (
+                            <p key={index}>
+                              <a
+                                className={fieldIsSelected(field) ? 'disabled' : ''}
+                                onDoubleClick={() => addField(field)}
+                              >
+                                {field}
+                              </a>
+                            </p>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           <SaveSettingsModal open={isModalOpen} onOpenChange={setIsModalOpen} onSubmit={handleSaveSettings} />

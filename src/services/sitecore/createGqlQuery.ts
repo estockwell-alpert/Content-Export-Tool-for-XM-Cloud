@@ -137,8 +137,10 @@ export const getFieldsFragment = (fields?: string): string => {
         continue;
       }
 
+      let fieldName = field.replaceAll(' ', '').replaceAll('__', '');
+
       fieldsFragment +=
-        field +
+        fieldName +
         `: field(name: "` +
         field +
         `") {
