@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       let templateResult: ITemplateSchema = {
         templateName: template.name,
         templatePath: template.path,
+        folder: template.parent?.name,
         sections: [],
       };
 
@@ -161,6 +162,7 @@ export const GetFieldsForTemplate = (templateId: string) => {};
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
+  folder: string;
   sections: ITemplateSection[];
 }
 
