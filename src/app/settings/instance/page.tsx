@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { IInstance } from '@/models/IInstance';
+import { getXmCloudToken } from '@/services/sitecore/getXmCloudToken';
 import { Separator } from '@radix-ui/react-separator';
 import { PlusCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -60,6 +61,28 @@ export default function InstanceSetupPage() {
     setInstances(updatedInstances);
     if (typeof window !== 'undefined') {
       localStorage.setItem('instances', JSON.stringify(updatedInstances));
+    }
+  };
+
+  const handleRefreshInstance = async (id: string) => {
+    const allInstances = instances;
+    console.log('Refresh ID: ' + id);
+    for (let instance of allInstances) {
+      console.log(instance);
+      if (instance.id === id) {
+        console.log('Refreshing instance...');
+        const tokenResponse = await getXmCloudToken(instance.clientId ?? '', instance.clientSecret ?? '');
+        if (tokenResponse.access_token) {
+          instance.apiToken = tokenResponse.access_token;
+          console.log('Updated access token');
+        } else {
+          console.log(tokenResponse);
+        }
+      }
+    }
+    setInstances(allInstances);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('instances', JSON.stringify(instances));
     }
   };
 
@@ -112,7 +135,7 @@ export default function InstanceSetupPage() {
                 onSubmit={handleAddInstance}
               />
 
-              <ListingTable instances={instances} onDelete={handleDeleteInstance} />
+              <ListingTable instances={instances} onDelete={handleDeleteInstance} onRefresh={handleRefreshInstance} />
             </div>
           </div>
         </div>

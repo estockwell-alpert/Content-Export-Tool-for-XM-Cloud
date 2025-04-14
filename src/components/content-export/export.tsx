@@ -124,12 +124,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
-    await GenerateSchemaExport(
-      activeInstance.instanceType === enumInstanceType.auth,
-      activeInstance.graphQlEndpoint,
-      activeInstance.apiToken,
-      templatesStartItem
-    );
+    await GenerateSchemaExport(activeInstance, templatesStartItem);
   };
 
   const fieldIsSelected = (field: string): boolean => {

@@ -1,14 +1,13 @@
 import { IField, ITemplateSchema, IWorksheetSchema } from '@/app/api/export/schema/route';
-import { enumInstanceType } from '@/models/IInstance';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
+import { getXmCloudToken } from './getXmCloudToken';
 import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
 
 export const GenerateContentExport = async (
-  authoringEndpoint: boolean,
-  gqlEndpoint?: string,
-  gqlApiKey?: string,
+  instance: IInstance,
   startItem?: string,
   templates?: string,
   fields?: string,
@@ -19,9 +18,17 @@ export const GenerateContentExport = async (
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
 
+  const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
+  const gqlEndpoint = instance.graphQlEndpoint;
+  let gqlApiKey = instance.apiToken;
+
   ///
   if (!gqlEndpoint || !gqlApiKey) {
     return;
+  }
+
+  if (authoringEndpoint) {
+    gqlApiKey = await RefreshApiKey(instance);
   }
 
   if (loadingModal) {
@@ -141,8 +148,6 @@ export const GenerateContentExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
-
-  alert('Done - check your downloads!');
 };
 
 export const GetSearchQueryResults = async (gqlEndpoint: string, gqlApiKey: string, query: string): Promise<any> => {
@@ -252,9 +257,9 @@ export const GetContentExportResults = async (
 let errorHasBeenDisplayed = false;
 
 export const PostMutationQuery = async (
+  instance: IInstance,
   update: boolean,
   gqlEndpoint?: string,
-  authToken?: string,
   csvData?: any[]
 ): Promise<string[]> => {
   errorHasBeenDisplayed = false;
@@ -263,6 +268,8 @@ export const PostMutationQuery = async (
   if (loadingModal) {
     loadingModal.style.display = 'block';
   }
+
+  const authToken = await RefreshApiKey(instance);
 
   if (!gqlEndpoint || !authToken) {
     alert('Select an Instance with an Auth token');
@@ -376,16 +383,14 @@ export const PostMutationQuery = async (
   return errors;
 };
 
-export const GenerateSchemaExport = async (
-  authoringEndpoint: boolean,
-  gqlEndpoint?: string,
-  gqlApiKey?: string,
-  startItem?: string
-) => {
+export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
 
-  ///
+  const gqlEndpoint = instance.graphQlEndpoint;
+  let gqlApiKey = instance.apiToken;
+  const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
+
   if (!gqlEndpoint || !gqlApiKey) {
     return;
   }
@@ -393,6 +398,12 @@ export const GenerateSchemaExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'block';
   }
+
+  console.log('Try refresh auth token:');
+  if (authoringEndpoint) {
+    gqlApiKey = await RefreshApiKey(instance);
+  }
+  console.log('Refreshed auth token: ' + gqlApiKey);
 
   const response = await fetch('/api/export/schema', {
     method: 'POST',
@@ -421,6 +432,21 @@ export const GenerateSchemaExport = async (
   }
 
   alert('Done - check your downloads!');
+};
+
+export const RefreshApiKey = async (instance: IInstance): Promise<string> => {
+  if (instance.instanceType === enumInstanceType.auth) {
+    // automatically refresh instance
+    const tokenResponse = await getXmCloudToken(instance.clientId ?? '', instance.clientSecret ?? '');
+    if (tokenResponse.access_token) {
+      console.log('Refreshed access token');
+      return tokenResponse.access_token;
+    } else {
+      console.log(tokenResponse);
+    }
+  }
+
+  return instance.apiToken ?? '';
 };
 
 export const CleanFieldValue = (value: string): string => {
@@ -569,6 +595,11 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
       'Required',
     ],
   ];
+
+  if (worksheets.length === 0) {
+    alert('No results found');
+    return;
+  }
 
   // add every worksheet to file
   for (var i = 0; i < worksheets.length; i++) {

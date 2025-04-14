@@ -57,22 +57,17 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         return;
       }
 
+      if (!activeInstance) {
+        alert('No instance selected');
+        return;
+      }
+
       if (isUpdate) {
-        const errors = await PostMutationQuery(
-          true,
-          activeInstance?.graphQlEndpoint,
-          activeInstance?.apiToken,
-          parsedCsvData
-        );
+        const errors = await PostMutationQuery(activeInstance, true, activeInstance?.graphQlEndpoint, parsedCsvData);
         console.log(errors);
         setErrors(errors);
       } else if (isCreate) {
-        const errors = await PostMutationQuery(
-          false,
-          activeInstance?.graphQlEndpoint,
-          activeInstance?.apiToken,
-          parsedCsvData
-        );
+        const errors = await PostMutationQuery(activeInstance, false, activeInstance?.graphQlEndpoint, parsedCsvData);
         setErrors(errors);
       }
 
