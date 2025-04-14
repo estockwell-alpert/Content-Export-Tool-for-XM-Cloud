@@ -1,3 +1,5 @@
+import { gql } from 'graphql-request';
+
 export const UpdateQueryTemplate = `
 mutation UpdateItem {
     updateItem(
@@ -42,3 +44,29 @@ mutation {
     }
   }
 }`;
+
+export const CreateTemplateQuery = gql`
+  mutation {
+    createItemTemplate(input: { name: "[TEMPLATENAME]", parent: "[PARENTID]", sections: [[SECTIONFRAGMENTS]] }) {
+      itemTemplate {
+        name
+        ownFields {
+          nodes {
+            name
+            type
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const SectionFragment = gql`
+{name: "[SECTIONNAME]"
+fields: [
+  fieldFragments
+]}`;
+
+export const TemplateFieldFragment = gql`
+{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]" }
+`;

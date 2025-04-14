@@ -1,10 +1,17 @@
-import { IField, ITemplateSchema, IWorksheetSchema } from '@/app/api/export/schema/route';
+import { IField, ITemplateSchema, ITemplateSection, IWorksheetSchema } from '@/app/api/export/schema/route';
 import { enumInstanceType, IInstance } from '@/models/IInstance';
+import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
 import { getXmCloudToken } from './getXmCloudToken';
 import { postToAuthApi } from './postToAuthApi';
-import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
+import {
+  CreateQueryTemplate,
+  CreateTemplateQuery,
+  SectionFragment,
+  TemplateFieldFragment,
+  UpdateQueryTemplate,
+} from './updateTemplate.query';
 
 export const GenerateContentExport = async (
   instance: IInstance,
@@ -432,6 +439,192 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
   }
 
   alert('Done - check your downloads!');
+};
+
+export const PostCreateTemplateQuery = async (instance: IInstance, file: File): Promise<string[]> => {
+  errorHasBeenDisplayed = false;
+  // show loading modal
+  const loadingModal = document.getElementById('loading-modal');
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const authToken = await RefreshApiKey(instance);
+  const gqlEndpoint = instance.graphQlEndpoint;
+
+  console.log('File type: ' + file.type);
+
+  let csvData: any;
+
+  let queries = [];
+
+  if (file.type === 'text/csv') {
+    console.log('CSV file');
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        csvData = results.data;
+      },
+    });
+  } else if (file.name.endsWith('.xlsx')) {
+    console.log('Excel file');
+
+    const workbook = XLSX.read(file);
+    for (var i = 0; i < workbook.SheetNames.length; i++) {
+      var sheet = workbook.Sheets[workbook.SheetNames[i]];
+      const worksheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      console.log(worksheetData);
+      if (!csvData) {
+        csvData = worksheetData;
+      } else {
+        csvData = csvData.concat(worksheetData);
+      }
+    }
+  }
+
+  console.log('Full CSV Data:');
+  console.log(csvData);
+
+  let templateSchemas: ITemplateSchema[] = [];
+  let currentSchema: ITemplateSchema | null = null;
+  let query = '';
+  // iterate through requests
+  for (var i = 0; i < csvData.length; i++) {
+    const row = csvData[i];
+
+    // if row has Template Name or is empty, finish previous query and start new query
+    if ((!row.template && !row.fieldName) || row.template) {
+      // finish up previous schema
+      if (currentSchema) {
+        templateSchemas.push(currentSchema);
+      }
+
+      currentSchema = {
+        templateName: '',
+        templatePath: '',
+        folder: '',
+        sections: [],
+      };
+
+      if (row.template) {
+        currentSchema.templateName = row.template;
+        currentSchema.templatePath = row.parent;
+      }
+    } else if (row.fieldName && currentSchema) {
+      // get section
+      var sectionName = row.section;
+      const sectionIndex = currentSchema.sections.findIndex((x) => x.name === sectionName);
+      let section: ITemplateSection;
+      if (sectionIndex === -1) {
+        section = {
+          name: sectionName,
+          fields: [],
+        };
+      } else {
+        section = currentSchema.sections[sectionIndex];
+      }
+
+      if (section.fields.some((field) => field.name == row.fieldName)) {
+        console.log('SECTION ALREADY CONTAINS FIELD');
+      } else {
+        const field: IField = {
+          name: row.fieldName,
+          machineName: row.machineName,
+          fieldType: row.fieldType,
+          defaultValue: row.defaultValue,
+          helpText: row.helpText,
+          required: row.required,
+          inheritedFrom: '',
+          template: '',
+          path: '',
+          section: sectionName,
+        };
+        section.fields.push(field);
+      }
+
+      if (sectionIndex === -1) {
+        currentSchema.sections.push(section);
+      } else {
+        currentSchema.sections[sectionIndex] = section;
+      }
+    }
+    // add last template
+    if (currentSchema) templateSchemas.push(currentSchema);
+
+    // now that we have all our schema items, create our queries
+    for (var i = 0; i < templateSchemas.length; i++) {
+      const template = templateSchemas[i];
+      let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName).replace(
+        '[PARENTID]',
+        template.templatePath
+      );
+
+      let sectionsFragments = '';
+      for (var s = 0; s < template.sections.length; s++) {
+        const section = template.sections[s];
+        const sectionFragment = SectionFragment.replace('[SECTIONNAME]', section.name);
+
+        let fieldFragments = '';
+        for (var f = 0; f < section.fields.length; f++) {
+          const field = section.fields[f];
+          fieldFragments += TemplateFieldFragment.replace('[FIELDNAME]', field.machineName ?? field.name)
+            .replace('[FIELDTYPE]', field.fieldType)
+            .replace('[TITLE]', field.name)
+            .replace('[DEFAULT]', field.defaultValue)
+            .replace('[DESCRIPTION]', field.helpText);
+        }
+
+        sectionsFragments += sectionFragment;
+      }
+
+      query = query.replace('[SECTIONFRAGMENTS]', sectionsFragments);
+
+      console.log(query);
+
+      const jsonQuery = {
+        query: query,
+      };
+      queries.push(jsonQuery);
+    }
+  }
+
+  console.log('All Queries:');
+  console.log(queries);
+
+  const errors: string[] = [];
+
+  try {
+    for (var i = 0; i < queries.length; i++) {
+      const results = await postToAuthApi(gqlEndpoint, authToken, JSON.stringify(queries[i]));
+      console.log('Results: ');
+      console.log(results);
+
+      if (results.errors) {
+        for (var j = 0; j < results.errors.length; j++) {
+          var error = results.errors[j];
+          errors.push(error.message.replace(/[\r\n]+/gm, ' '));
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
+    }
+
+    return [JSON.stringify(error)];
+  }
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
+
+  console.log('ERRORS: ');
+  console.log(errors);
+  return errors;
 };
 
 export const RefreshApiKey = async (instance: IInstance): Promise<string> => {

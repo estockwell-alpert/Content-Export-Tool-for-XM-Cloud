@@ -106,9 +106,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     console.log(itemFields);
 
     await GenerateContentExport(
-      activeInstance.instanceType === enumInstanceType.auth,
-      activeInstance.graphQlEndpoint,
-      activeInstance.apiToken,
+      activeInstance,
       startItem,
       templates,
       itemFields,
