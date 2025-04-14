@@ -469,8 +469,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
     });
   } else if (file.name.endsWith('.xlsx')) {
     console.log('Excel file');
-
-    const workbook = XLSX.read(file);
+    const fileData = await file.arrayBuffer();
+    const workbook = XLSX.read(fileData);
+    console.log(workbook);
     for (var i = 0; i < workbook.SheetNames.length; i++) {
       var sheet = workbook.Sheets[workbook.SheetNames[i]];
       const worksheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
@@ -490,17 +491,50 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
   let templateSchemas: ITemplateSchema[] = [];
   let currentSchema: ITemplateSchema | null = null;
   let query = '';
+  let templateNameIndex = -1;
+  let templateParentIndex = -1;
+  let sectionNameIndex = -1;
+  let fieldNameIndex = -1;
+  let machineNameIndex = -1;
+  let fieldTypeIndex = -1;
+  let defaultValueIndex = -1;
+  let descriptionIndex = -1;
+  let requiredIndex = -1;
   // iterate through requests
   for (var i = 0; i < csvData.length; i++) {
+    // header row
+    if (i === 0) {
+      let row = csvData[i];
+      templateNameIndex = row.indexOf('Template');
+      templateParentIndex = row.indexOf('Parent');
+      sectionNameIndex = row.indexOf('Section');
+      fieldNameIndex = row.indexOf('Field Name');
+      machineNameIndex = row.indexOf('Machine Name');
+      if (machineNameIndex === -1) {
+        machineNameIndex = fieldNameIndex;
+      }
+      fieldTypeIndex = row.indexOf('Field Type');
+      defaultValueIndex = row.indexOf('Default Value');
+      descriptionIndex = row.indexOf('Help Text');
+      requiredIndex = row.indexOf('Required');
+
+      if (templateNameIndex === -1 || templateParentIndex === -1 || fieldNameIndex === -1 || fieldTypeIndex === -1) {
+        return ['Missing required fields'];
+      }
+
+      continue;
+    }
+
     const row = csvData[i];
 
     // if row has Template Name or is empty, finish previous query and start new query
-    if ((!row.template && !row.fieldName) || row.template) {
+    if ((row[templateNameIndex] && row[templateNameIndex] !== '') || row.length === 0) {
       // finish up previous schema
-      if (currentSchema) {
+      if (currentSchema && currentSchema.templateName !== '' && currentSchema.sections.length > 0) {
         templateSchemas.push(currentSchema);
       }
 
+      // set up new schema
       currentSchema = {
         templateName: '',
         templatePath: '',
@@ -508,13 +542,14 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
         sections: [],
       };
 
-      if (row.template) {
-        currentSchema.templateName = row.template;
-        currentSchema.templatePath = row.parent;
+      // if row is not blank:
+      if (row[templateNameIndex] && row[templateNameIndex] !== '') {
+        currentSchema.templateName = row[templateNameIndex];
+        currentSchema.templatePath = row[templateParentIndex];
       }
-    } else if (row.fieldName && currentSchema) {
+    } else if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
       // get section
-      var sectionName = row.section;
+      var sectionName = sectionNameIndex > -1 ? row[sectionNameIndex] : 'Data';
       const sectionIndex = currentSchema.sections.findIndex((x) => x.name === sectionName);
       let section: ITemplateSection;
       if (sectionIndex === -1) {
@@ -526,16 +561,16 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
         section = currentSchema.sections[sectionIndex];
       }
 
-      if (section.fields.some((field) => field.name == row.fieldName)) {
+      if (section.fields.some((field) => field.name == row[fieldNameIndex])) {
         console.log('SECTION ALREADY CONTAINS FIELD');
       } else {
         const field: IField = {
-          name: row.fieldName,
-          machineName: row.machineName,
-          fieldType: row.fieldType,
-          defaultValue: row.defaultValue,
-          helpText: row.helpText,
-          required: row.required,
+          name: row[fieldNameIndex],
+          machineName: row[machineNameIndex],
+          fieldType: row[fieldTypeIndex],
+          defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
+          helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
+          required: requiredIndex > -1 ? row[requiredIndex] : false,
           inheritedFrom: '',
           template: '',
           path: '',
@@ -550,44 +585,47 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
         currentSchema.sections[sectionIndex] = section;
       }
     }
-    // add last template
-    if (currentSchema) templateSchemas.push(currentSchema);
+  }
 
-    // now that we have all our schema items, create our queries
-    for (var i = 0; i < templateSchemas.length; i++) {
-      const template = templateSchemas[i];
-      let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName).replace(
-        '[PARENTID]',
-        template.templatePath
-      );
+  // add last template
+  if (currentSchema && currentSchema.templateName !== '' && currentSchema.sections.length > 0) {
+    templateSchemas.push(currentSchema);
+  }
 
-      let sectionsFragments = '';
-      for (var s = 0; s < template.sections.length; s++) {
-        const section = template.sections[s];
-        const sectionFragment = SectionFragment.replace('[SECTIONNAME]', section.name);
+  // now that we have all our schema items, create our queries
+  for (var i = 0; i < templateSchemas.length; i++) {
+    const template = templateSchemas[i];
+    let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName).replace(
+      '[PARENTID]',
+      template.templatePath
+    );
 
-        let fieldFragments = '';
-        for (var f = 0; f < section.fields.length; f++) {
-          const field = section.fields[f];
-          fieldFragments += TemplateFieldFragment.replace('[FIELDNAME]', field.machineName ?? field.name)
-            .replace('[FIELDTYPE]', field.fieldType)
-            .replace('[TITLE]', field.name)
-            .replace('[DEFAULT]', field.defaultValue)
-            .replace('[DESCRIPTION]', field.helpText);
-        }
+    let sectionsFragments = '';
+    for (var s = 0; s < template.sections.length; s++) {
+      const section = template.sections[s];
+      const sectionFragment = SectionFragment.replace('[SECTIONNAME]', section.name);
 
-        sectionsFragments += sectionFragment;
+      let fieldFragments = '';
+      for (var f = 0; f < section.fields.length; f++) {
+        const field = section.fields[f];
+        fieldFragments += TemplateFieldFragment.replace('[FIELDNAME]', field.machineName ?? field.name)
+          .replace('[FIELDTYPE]', field.fieldType)
+          .replace('[TITLE]', field.name)
+          .replace('[DEFAULT]', field.defaultValue)
+          .replace('[DESCRIPTION]', field.helpText);
       }
 
-      query = query.replace('[SECTIONFRAGMENTS]', sectionsFragments);
-
-      console.log(query);
-
-      const jsonQuery = {
-        query: query,
-      };
-      queries.push(jsonQuery);
+      sectionsFragments += sectionFragment.replace('[FIELDFRAGMENTS]', fieldFragments);
     }
+
+    query = query.replace('[SECTIONFRAGMENTS]', sectionsFragments);
+
+    console.log(query);
+
+    const jsonQuery = {
+      query: query,
+    };
+    queries.push(jsonQuery);
   }
 
   console.log('All Queries:');

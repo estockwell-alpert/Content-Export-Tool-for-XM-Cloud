@@ -61,12 +61,12 @@ export const CreateTemplateQuery = gql`
   }
 `;
 
-export const SectionFragment = gql`
-{name: "[SECTIONNAME]"
-fields: [
-  fieldFragments
-]}`;
+export const SectionFragment = gql`{
+        name: "[SECTIONNAME]"
+        fields: [
+          [FIELDFRAGMENTS]]
+      }
+  `;
 
-export const TemplateFieldFragment = gql`
-{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]" }
+export const TemplateFieldFragment = gql`{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]" }
 `;
