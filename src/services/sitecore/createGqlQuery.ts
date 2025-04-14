@@ -1,8 +1,11 @@
 import {
+  AuthoringLangFragment,
   AuthoringPathFragment,
   AuthoringSearchQueryTemplate,
   AuthoringTemplatesFragment,
+  EdgeLangFragment,
   EdgeSearchQueryTemplate,
+  SchemaQueryTemplate,
 } from './searchTemplate.query';
 
 export const GetSearchQuery = (
@@ -12,6 +15,7 @@ export const GetSearchQuery = (
   startItems?: string,
   templates?: string,
   fields?: string,
+  languages?: string,
   cursor?: string
 ): string => {
   if (!gqlEndpoint || !gqlApiKey) {
@@ -19,16 +23,18 @@ export const GetSearchQuery = (
   }
 
   if (authoringEndpoint) {
-    return GetAuthoringApiQuery(startItems, templates, fields, cursor);
+    return GetAuthoringApiQuery(startItems, templates, fields, languages, cursor);
   } else {
-    return GetEdgeQuery(startItems, templates, fields, cursor);
+    return GetEdgeQuery(startItems, templates, fields, languages, cursor);
   }
 };
 
+// NOTE: Authoring Query only currently supports ONE path and template until I figure out how to do AND(OR)
 export const GetAuthoringApiQuery = (
   startItems?: string,
   templates?: string,
   fields?: string,
+  languages?: string,
   cursor?: string
 ): string => {
   let pathFragment = '';
@@ -54,17 +60,33 @@ export const GetAuthoringApiQuery = (
     }
   }
 
+  let langFragment = '';
+  if (languages) {
+    const langs = languages.split(',');
+    for (var i = 0; i < langs.length; i++) {
+      const lang = langs[i].trim().toLowerCase();
+      langFragment += AuthoringLangFragment.replace('CODE', lang);
+    }
+  }
+
   let fieldsFragment = getFieldsFragment(fields);
 
   const query = AuthoringSearchQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
     .replace('fieldsFragment', fieldsFragment)
+    .replace('langFragment', langFragment)
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
   return query;
 };
 
-export const GetEdgeQuery = (startItems?: string, templates?: string, fields?: string, cursor?: string): string => {
+export const GetEdgeQuery = (
+  startItems?: string,
+  templates?: string,
+  fields?: string,
+  languages?: string,
+  cursor?: string
+): string => {
   let pathFragment = '';
   if (startItems) {
     const paths = startItems.split(',');
@@ -99,9 +121,19 @@ export const GetEdgeQuery = (startItems?: string, templates?: string, fields?: s
 
   let fieldsFragment = getFieldsFragment(fields);
 
+  let langFragment = '';
+  if (languages) {
+    const langs = languages.split(',');
+    for (var i = 0; i < langs.length; i++) {
+      const lang = langs[i].trim().toLowerCase();
+      langFragment += EdgeLangFragment.replace('CODE', lang);
+    }
+  }
+
   const query = EdgeSearchQueryTemplate.replace('pathsFragment', pathFragment)
     .replace('templatesFragment', templateFragment)
     .replace('fieldsFragment', fieldsFragment)
+    .replace('langFragment', langFragment)
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
 
   return query;
@@ -123,8 +155,10 @@ export const getFieldsFragment = (fields?: string): string => {
         continue;
       }
 
+      let fieldName = field.replaceAll(' ', '').replaceAll('__', '');
+
       fieldsFragment +=
-        field +
+        fieldName +
         `: field(name: "` +
         field +
         `") {
@@ -164,4 +198,36 @@ export const GetTemplateSchemaQuery = (template: string): string => {
         }
     }`
   );
+};
+
+export const GetSchemaQuery = (startItems?: string, templates?: string, fields?: string, cursor?: string): string => {
+  let pathFragment = '';
+  if (startItems) {
+    const paths = startItems.split(',');
+    for (var i = 0; i < paths.length; i++) {
+      const path = paths[i].trim().toLowerCase().replaceAll('{', '').replaceAll('}', '').replaceAll('-', '');
+      pathFragment += AuthoringPathFragment.replace('GUID', path);
+    }
+  }
+
+  let templateFragment = '';
+  if (templates) {
+    const templateStrings = templates.split(',');
+    for (var i = 0; i < templateStrings.length; i++) {
+      const template = templateStrings[i]
+        .trim()
+        .toLowerCase()
+        .replaceAll('{', '')
+        .replaceAll('}', '')
+        .replaceAll('-', '');
+      templateFragment += AuthoringTemplatesFragment.replace('GUID', template);
+    }
+  }
+
+  const query = SchemaQueryTemplate.replace('pathsFragment', pathFragment)
+    .replace('templatesFragment', templateFragment)
+    .replace('langFragment', 'en')
+    .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
+
+  return query;
 };

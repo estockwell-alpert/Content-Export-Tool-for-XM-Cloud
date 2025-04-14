@@ -1,4 +1,6 @@
+import { IField, ITemplateSchema, IWorksheetSchema } from '@/app/api/export/schema/route';
 import { enumInstanceType } from '@/models/IInstance';
+import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
 import { postToAuthApi } from './postToAuthApi';
 import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
@@ -9,7 +11,10 @@ export const GenerateContentExport = async (
   gqlApiKey?: string,
   startItem?: string,
   templates?: string,
-  fields?: string
+  fields?: string,
+  languages?: string,
+  includeTemplate?: boolean,
+  includeLang?: boolean
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -23,12 +28,14 @@ export const GenerateContentExport = async (
     loadingModal.style.display = 'block';
   }
 
+  console.log(fields);
+
   const response = await fetch('/api/export', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint }),
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, languages, authoringEndpoint }),
   });
 
   if (!response.ok) {
@@ -37,11 +44,19 @@ export const GenerateContentExport = async (
 
   const results = await response.json();
 
+  console.log(results);
+
   let csvData = [];
 
   // first row of CSV
   const fieldStrings = fields?.split(',');
   let headerRow = 'Item Path,Name,ID,';
+  if (includeTemplate) {
+    headerRow += 'Template,';
+  }
+  if (includeLang) {
+    headerRow += 'Language,';
+  }
   if (fieldStrings) {
     for (var i = 0; i < fieldStrings.length; i++) {
       if (fieldStrings[i].trim() === '') {
@@ -81,9 +96,16 @@ export const GenerateContentExport = async (
       resultRow = result.url.path + ',' + result.name + ',' + result.id + ',';
     }
 
+    if (includeTemplate) {
+      resultRow += result.template?.name + ',';
+    }
+    if (includeLang) {
+      resultRow += result.language?.name + ',';
+    }
+
     if (fieldStrings) {
       for (var j = 0; j < fieldStrings.length; j++) {
-        const field = fieldStrings[j].trim();
+        const field = fieldStrings[j].trim().replaceAll(' ', '').replaceAll('__', '');
 
         if (fieldStrings[j].trim() === '') {
           continue;
@@ -149,7 +171,8 @@ export const GetContentExportResults = async (
   gqlApiKey?: string,
   startItem?: string,
   templates?: string,
-  fields?: string
+  fields?: string,
+  languages?: string
 ): Promise<any | undefined> => {
   const query = GetSearchQuery(
     instanceType === enumInstanceType.auth,
@@ -157,7 +180,8 @@ export const GetContentExportResults = async (
     gqlApiKey,
     startItem,
     templates,
-    fields
+    fields,
+    languages
   );
 
   console.log(query);
@@ -351,3 +375,229 @@ export const PostMutationQuery = async (
   console.log(errors);
   return errors;
 };
+
+export const GenerateSchemaExport = async (
+  authoringEndpoint: boolean,
+  gqlEndpoint?: string,
+  gqlApiKey?: string,
+  startItem?: string
+) => {
+  // show loading modal
+  const loadingModal = document.getElementById('loading-modal');
+
+  ///
+  if (!gqlEndpoint || !gqlApiKey) {
+    return;
+  }
+
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const response = await fetch('/api/export/schema', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, authoringEndpoint }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const results: any = await response.json();
+
+  console.log(results);
+  const templates = results.templates;
+
+  // CSV:
+  //const csvString = ResultsToCsv(templates);
+  // Excel:
+  ResultsToXslx(templates);
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
+
+  alert('Done - check your downloads!');
+};
+
+export const CleanFieldValue = (value: string): string => {
+  try {
+    if (!value || value == null) return '';
+    let cleanFieldValue = value.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
+    // double quote to escape commas
+    if (cleanFieldValue.indexOf(',') > -1) {
+      cleanFieldValue = '"' + cleanFieldValue + '"';
+    }
+    return cleanFieldValue;
+  } catch (ex) {
+    return '';
+  }
+};
+
+export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
+  let csvData = [];
+
+  // first row of CSV
+  let headerRow = 'Template,Path,Section,Name,Machine Name,Field Type,Required,Default Value,Help Text,Inherited From';
+  csvData.push(headerRow);
+
+  for (var i = 0; i < templates.length; i++) {
+    let template: ITemplateSchema = templates[i];
+
+    if (template.sections.length === 0) continue;
+
+    csvData.push(template.templateName + ',' + template.templatePath);
+
+    for (var j = 0; j < template.sections.length; j++) {
+      var section = template.sections[j];
+
+      const sectionName = section.name;
+
+      for (var k = 0; k < section.fields.length; k++) {
+        const field = section.fields[k];
+        const name = field.name;
+        const machineName = field.machineName;
+        const fieldType = field.fieldType;
+        const required = field.required ? 'TRUE' : '';
+        const helpText = field.helpText;
+        const defaultValue = field.defaultValue;
+        const inheritedFrom = field.inheritedFrom;
+
+        let resultRow = '';
+
+        resultRow += ',,';
+        resultRow += CleanFieldValue(sectionName) + ',';
+        resultRow += name + ',';
+        resultRow += CleanFieldValue(machineName) + ',';
+        resultRow += fieldType + ',';
+        resultRow += required + ',';
+        resultRow += CleanFieldValue(defaultValue) + ',';
+        resultRow += CleanFieldValue(helpText) + ',';
+        resultRow += inheritedFrom;
+
+        console.log(resultRow);
+        csvData.push(resultRow);
+      }
+    }
+    csvData.push('');
+  }
+
+  let csvString = '';
+  for (let i = 0; i < csvData.length; i++) {
+    csvString += csvData[i] + '\n';
+  }
+
+  const element = document.createElement('a');
+  const file = new Blob([csvString], { type: 'text/csv' });
+  element.href = URL.createObjectURL(file);
+  element.download = 'SchemaExport.csv';
+  document.body.appendChild(element); // Required for this to work in FireFox
+  element.click();
+};
+
+export const ResultsToXslx = (templates: ITemplateSchema[]) => {
+  // Create Excel workbook and worksheet
+  const workbook = XLSX.utils.book_new();
+  //const worksheet = XLSX.utils?.json_to_sheet(templates);
+  //XLSX.utils.book_append_sheet(workbook, worksheet, 'Templates Schema');
+
+  const worksheets: IWorksheetSchema[] = [];
+
+  for (var i = 0; i < templates.length; i++) {
+    const template = templates[i];
+    const folder = templates[i].folder;
+
+    if (template.sections.length == 0) continue;
+
+    const worksheetIndex = worksheets.findIndex((x) => x.sheetName === folder);
+    let worksheet: IWorksheetSchema;
+    if (worksheetIndex === -1) {
+      worksheet = {
+        sheetName: folder,
+        data: [],
+      };
+    } else {
+      worksheet = worksheets[worksheetIndex];
+    }
+
+    const templateRow: IField = {
+      template: template.templateName,
+      path: template.templatePath,
+      section: '',
+      name: '',
+      machineName: '',
+      fieldType: '',
+      defaultValue: '',
+      helpText: '',
+      inheritedFrom: '',
+    };
+
+    worksheet.data.push(templateRow);
+
+    for (var j = 0; j < template.sections.length; j++) {
+      const dataLines = template.sections[j].fields;
+      worksheet.data = worksheet.data.concat(dataLines);
+    }
+
+    // add empty line for spacing
+    worksheet.data.push([]);
+
+    console.log(worksheet.data);
+
+    // udpate worksheets list
+    if (worksheetIndex === -1) {
+      worksheets.push(worksheet);
+    } else {
+      worksheets[worksheetIndex] = worksheet;
+    }
+  }
+
+  const header = [
+    [
+      'Template',
+      'Path',
+      'Section',
+      'Field Name',
+      'Machine Name',
+      'Field Type',
+      'Default Value',
+      'Help Text',
+      'Inherited From',
+      'Required',
+    ],
+  ];
+
+  // add every worksheet to file
+  for (var i = 0; i < worksheets.length; i++) {
+    const worksheet = XLSX.utils?.json_to_sheet(worksheets[i].data);
+    XLSX.utils.sheet_add_aoa(worksheet, header);
+    XLSX.utils.book_append_sheet(workbook, worksheet, worksheets[i].sheetName);
+  }
+
+  // Save the workbook as an Excel file
+  XLSX.writeFile(workbook, `${'Templates Schema'}.xlsx`);
+  console.log(`Exported data to xslx`);
+};
+
+export function resultsSort(a: any, b: any) {
+  var templateA = a.parent?.parent?.name;
+  var templateB = b.parent?.parent?.name;
+  var sectionA = a.parent?.name;
+  var sectionB = b.parent?.name;
+  if (templateA < templateB) {
+    return -1;
+  }
+  if (templateA > templateB) {
+    return 1;
+  }
+  if (sectionA < sectionB) {
+    return -1;
+  }
+  if (sectionA > sectionB) {
+    return 1;
+  }
+  return 0;
+}

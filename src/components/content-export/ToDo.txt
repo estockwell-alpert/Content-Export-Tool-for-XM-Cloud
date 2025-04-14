@@ -1,2 +1,7 @@
-1. Fix Exporting with commas and quotes (stupid rich text fields)
-2. Add validation to export fields - check that values are Guids e.g.
+1. Add Language option to Exporting
+2. Standard fields
+3. REFRESH AUTH TOKEN
+4. Currently Schema export only exports fields that live on templates; need to update it to include templates with base templates
+
+IMPORT TEMPLATES:
+https://docs.sheetjs.com/docs/getting-started/examples/import

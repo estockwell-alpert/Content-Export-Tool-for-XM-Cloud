@@ -15,6 +15,11 @@ export const EdgeSearchQueryTemplate = gql`
                         pathsFragment
                     ]
                 }
+                {
+                    OR:[
+                        langFragment
+                    ]
+                }
             ]
         }
         first: 1000
@@ -28,6 +33,13 @@ export const EdgeSearchQueryTemplate = gql`
         results {
             name
             id
+            template {
+              name
+              id
+            }
+            language {
+              name
+            }
             url {
                 path
             }
@@ -38,7 +50,23 @@ export const EdgeSearchQueryTemplate = gql`
 
 export const AuthoringSearchQueryTemplate = gql`
   {
-    search(query: { searchStatement: { criteria: [templatesFragment, pathsFragment] }, paging: { pageSize: 1000 } }) {
+    search(
+      query: {
+        searchStatement: {
+          operator: MUST
+          subStatements: {
+            criteria: [pathsFragment]
+            operator: MUST
+            subStatements: {
+              criteria: [templatesFragment]
+              operator: MUST
+              subStatements: { criteria: [langFragment], operator: MUST }
+            }
+          }
+        }
+        paging: { pageSize: 1000 }
+      }
+    ) {
       results {
         innerItem {
           itemId
@@ -47,6 +75,9 @@ export const AuthoringSearchQueryTemplate = gql`
           template {
             name
             templateId
+          }
+          language {
+            name
           }
           fieldsFragment
         }
@@ -57,3 +88,67 @@ export const AuthoringSearchQueryTemplate = gql`
 
 export const AuthoringTemplatesFragment = gql`{ criteriaType: SEARCH, field: "_template", value: "GUID" }`;
 export const AuthoringPathFragment = gql`{ criteriaType: SEARCH, field: "_path", value: "GUID" }`;
+export const AuthoringLangFragment = gql`{ criteriaType: SEARCH, field: "_language", value: "CODE" }`;
+export const EdgeLangFragment = gql`{ name: "_language",  value: "CODE" },`;
+
+export const SchemaQueryTemplate = gql`
+  {
+    search(
+      query: {
+        searchStatement: {
+          criteria: [{ criteriaType: SEARCH, field: "_language", value: "langFragment", operator: MUST }]
+          operator: MUST
+          subStatements: {
+            criteria: [pathsFragment]
+            operator: MUST
+            subStatements: { criteria: [templatesFragment], operator: MUST }
+          }
+        }
+        paging: { pageSize: 10000 }
+      }
+    ) {
+      results {
+        innerItem {
+          itemId
+          path
+          name
+          parent {
+            name
+            itemId
+            template {
+              name
+            }
+            parent {
+              name
+              itemId
+              template {
+                name
+              }
+            }
+          }
+          workflow: field(name: "Workflow") {
+            value
+          }
+          baseTemplate: field(name: "__Base template") {
+            value
+          }
+          type: field(name: "Type") {
+            value
+          }
+          title: field(name: "Title") {
+            value
+          }
+          source: field(name: "Source") {
+            value
+          }
+          helpText: field(name: "__Short description") {
+            value
+          }
+          defaultValue: field(name: "Default value") {
+            value
+          }
+        }
+      }
+    }
+  }
+`;

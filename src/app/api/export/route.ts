@@ -11,11 +11,20 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     console.log(body);
-    const { gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint } = body;
+    const { gqlEndpoint, gqlApiKey, startItem, templates, fields, languages, authoringEndpoint } = body;
 
     // Authoring API
     if (authoringEndpoint) {
-      const query = GetSearchQuery(authoringEndpoint, gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
+      const query = GetSearchQuery(
+        authoringEndpoint,
+        gqlEndpoint,
+        gqlApiKey,
+        startItem,
+        templates,
+        fields,
+        languages,
+        cursor
+      );
 
       const jsonQuery = {
         query: query,
@@ -47,7 +56,16 @@ export async function POST(request: Request) {
 
       while (hasNext && calls < 10) {
         try {
-          const query = GetSearchQuery(authoringEndpoint, gqlEndpoint, gqlApiKey, startItem, templates, fields, cursor);
+          const query = GetSearchQuery(
+            authoringEndpoint,
+            gqlEndpoint,
+            gqlApiKey,
+            startItem,
+            templates,
+            fields,
+            languages,
+            cursor
+          );
 
           const data: any = await graphQLClient.request(query);
 
