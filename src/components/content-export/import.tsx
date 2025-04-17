@@ -40,6 +40,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const onFileChange = (event: any) => {
     setErrors([]);
     setSchemaImportMessages([]);
+    setParsedCsvData(null);
     // Update the state
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -50,24 +51,42 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
         return;
       }
 
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function (results) {
-          setParsedCsvData(results.data);
-        },
-      });
+      if (file.type === 'text/csv') {
+        Papa.parse(file, {
+          header: false,
+          skipEmptyLines: false,
+          complete: function (results) {
+            setParsedCsvData(results.data);
+          },
+        });
+      }
     } catch (error) {
-      console.error('Error updating content:', error);
+      console.error('Error parsing file:', error);
     }
   };
 
   const onSchemaFileChange = (event: any) => {
     setErrors([]);
     setSchemaImportMessages([]);
+    setParsedCsvData(null);
     // Update the state
     const file = event.target.files[0];
     setSelectedSchemaFile(file);
+
+    // parse if csv
+    try {
+      if (file.type === 'text/csv') {
+        Papa.parse(file, {
+          header: false,
+          skipEmptyLines: true,
+          complete: function (results) {
+            setParsedCsvData(results.data);
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing file:', error);
+    }
   };
 
   const handleRunSchemaImport = async () => {
@@ -81,9 +100,10 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       return;
     }
 
-    const messages = await PostCreateTemplateQuery(activeInstance, selectedSchemaFile);
+    const messages = await PostCreateTemplateQuery(activeInstance, selectedSchemaFile, parsedCsvData);
 
     setSchemaImportMessages(messages);
+    setParsedCsvData(null);
 
     if (messages && messages.length > 1) {
       alert('Completed template import with errors; review error messages');
@@ -150,8 +170,8 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className={errors.length > 1 ? 'errors' : ''}>
-                {errors.map((message) => (
-                  <span>{message}</span>
+                {errors.map((message, index) => (
+                  <span key={index}>{message}</span>
                 ))}
               </p>
 
@@ -263,8 +283,8 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className={schemaImportMessages.length > 1 ? 'errors' : ''}>
-                {schemaImportMessages.map((message) => (
-                  <span>{message}</span>
+                {schemaImportMessages.map((message, index) => (
+                  <span key={index}>{message}</span>
                 ))}
               </p>
 

@@ -1,6 +1,5 @@
 import { IField, ITemplateSchema, ITemplateSection, IWorksheetSchema } from '@/app/api/export/schema/route';
 import { enumInstanceType, IInstance } from '@/models/IInstance';
-import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
 import { getXmCloudToken } from './getXmCloudToken';
@@ -393,11 +392,11 @@ export const PostMutationQuery = async (
   let messages: string[] = [];
 
   if (successfullQueries > 0) {
-    messages.push('Successfully created ' + successfullQueries + ' templates');
+    messages.push('Successfully created ' + successfullQueries + ' template(s)');
   }
 
   if (errors.length > 0) {
-    messages.push(errors.length + ' errors occured');
+    messages.push(errors.length + ' error(s) occured:');
     messages = messages.concat(errors);
   }
   return errors;
@@ -454,7 +453,7 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
   alert('Done - check your downloads!');
 };
 
-export const PostCreateTemplateQuery = async (instance: IInstance, file: File): Promise<string[]> => {
+export const PostCreateTemplateQuery = async (instance: IInstance, file: File, csvData?: any[]): Promise<string[]> => {
   errorHasBeenDisplayed = false;
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -467,19 +466,10 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
 
   console.log('File type: ' + file.type);
 
-  let csvData: any;
-
   let queries = [];
 
   if (file.type === 'text/csv') {
-    console.log('CSV file');
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function (results) {
-        csvData = results.data;
-      },
-    });
+    // don't need to do anything; our csv data is already parsed and passed in
   } else if (file.name.endsWith('.xlsx')) {
     console.log('Excel file');
     const fileData = await file.arrayBuffer();
@@ -500,6 +490,10 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
 
   console.log('Full CSV Data:');
   console.log(csvData);
+
+  if (!csvData) {
+    return ['Failed to parse file'];
+  }
 
   let templateSchemas: ITemplateSchema[] = [];
   let currentSchema: ITemplateSchema | null = null;
