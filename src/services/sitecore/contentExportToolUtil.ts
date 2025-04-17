@@ -357,6 +357,7 @@ export const PostMutationQuery = async (
   }
 
   const errors: string[] = [];
+  let successfullQueries = 0;
 
   try {
     for (var i = 0; i < queries.length; i++) {
@@ -369,6 +370,8 @@ export const PostMutationQuery = async (
           var error = results.errors[j];
           errors.push(error.message.replace(/[\r\n]+/gm, ' '));
         }
+      } else {
+        successfullQueries++;
       }
     }
   } catch (error) {
@@ -387,6 +390,16 @@ export const PostMutationQuery = async (
 
   console.log('ERRORS: ');
   console.log(errors);
+  let messages: string[] = [];
+
+  if (successfullQueries > 0) {
+    messages.push('Successfully created ' + successfullQueries + ' templates');
+  }
+
+  if (errors.length > 0) {
+    messages.push(errors.length + ' errors occured');
+    messages = messages.concat(errors);
+  }
   return errors;
 };
 
@@ -632,6 +645,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
   console.log(queries);
 
   const errors: string[] = [];
+  let successfullQueries = 0;
 
   try {
     for (var i = 0; i < queries.length; i++) {
@@ -644,6 +658,8 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
           var error = results.errors[j];
           errors.push(error.message.replace(/[\r\n]+/gm, ' '));
         }
+      } else {
+        successfullQueries++;
       }
     }
   } catch (error) {
@@ -662,7 +678,18 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File): 
 
   console.log('ERRORS: ');
   console.log(errors);
-  return errors;
+  let messages: string[] = [];
+
+  if (successfullQueries > 0) {
+    messages.push('Successfully created ' + successfullQueries + ' templates');
+  }
+
+  if (errors.length > 0) {
+    messages.push(errors.length + ' errors occured');
+    messages = messages.concat(errors);
+  }
+
+  return messages;
 };
 
 export const RefreshApiKey = async (instance: IInstance): Promise<string> => {
