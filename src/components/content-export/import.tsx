@@ -326,6 +326,28 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
                       <li>
                         <strong>Parent</strong> - Parent Item ID (GUID)
                       </li>
+                      <li>
+                        <strong>Section</strong> - section name for field
+                      </li>
+                      <li>
+                        <strong>Field Name</strong> - field name (put display name here if different from machine name)
+                      </li>
+
+                      <li>
+                        <strong>Field Type</strong> - e.g. Single-Line Text, Checkbox, Droptree, General Link
+                      </li>
+                    </ul>
+                    <p>Optional CSV columns:</p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li>
+                        <strong>Machine Name</strong> - (optional) name of field, if different from display name
+                      </li>
+                      <li>
+                        <strong>Default Value</strong> - (optional) default value
+                      </li>
+                      <li>
+                        <strong>Help Text</strong> - (optional) field description
+                      </li>
                     </ul>
 
                     <Separator />
