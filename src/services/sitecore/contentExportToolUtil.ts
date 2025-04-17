@@ -545,6 +545,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       currentSchema = {
         templateName: '',
         templatePath: '',
+        parent: '',
         folder: '',
         sections: [],
       };
@@ -581,6 +582,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           inheritedFrom: '',
           template: '',
           path: '',
+          parent: '',
           section: sectionName,
         };
         section.fields.push(field);
@@ -803,6 +805,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
 
     const templateRow: IField = {
       template: template.templateName,
+      parent: template.parent,
       path: template.templatePath,
       section: '',
       name: '',
@@ -836,6 +839,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
   const header = [
     [
       'Template',
+      'Parent',
       'Path',
       'Section',
       'Field Name',

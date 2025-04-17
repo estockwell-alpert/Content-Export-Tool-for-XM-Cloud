@@ -25,6 +25,8 @@ export async function POST(request: Request) {
       query: allTemplatesQuery,
     };
 
+    console.log(allTemplatesQuery);
+
     const allTemplatesResponse: any = await fetch(gqlEndpoint, {
       method: 'POST',
       headers: {
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
 
       let templateResult: ITemplateSchema = {
         templateName: template.name,
+        parent: template.parent.itemId,
         templatePath: template.path,
         folder: template.parent?.name,
         sections: [],
@@ -127,6 +130,7 @@ export async function POST(request: Request) {
           // update section
           let fieldObj: IField = {
             template: '',
+            parent: '',
             path: '',
             section: sectionName,
             name: field.title?.value,
@@ -173,6 +177,7 @@ export interface IWorksheetSchema {
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
+  parent: string;
   folder: string;
   sections: ITemplateSection[];
 }
@@ -184,6 +189,7 @@ export interface ITemplateSection {
 
 export interface IField {
   template: string;
+  parent: string;
   path: string;
   section: string;
   name: string;

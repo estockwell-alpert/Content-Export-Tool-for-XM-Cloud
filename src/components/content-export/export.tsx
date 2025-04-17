@@ -524,7 +524,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                       </Button>
                     </div>
                     <Textarea
-                      value={startItem}
+                      value={templatesStartItem}
                       onChange={handleTemplatesStartItem}
                       placeholder="e.g. {3C1715FE-6A13-4FCF-845F-DE308BA9741D}; defaults to entire Templates folder, enter subfolders to narrow it down"
                       className={'font-mono text-sm ' + (errorTemplatesStartItem ? 'error' : '')}
