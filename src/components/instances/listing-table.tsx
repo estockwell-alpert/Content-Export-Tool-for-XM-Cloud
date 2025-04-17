@@ -1,5 +1,5 @@
 import { enumInstanceType, IInstance } from '@/models/IInstance';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, RefreshCcwIcon, Trash2 } from 'lucide-react';
 import { FC, useState } from 'react';
 import {
   AlertDialog,
@@ -26,12 +26,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 interface ListingTableProps {
   instances: IInstance[] | undefined;
   onDelete: (id: string) => void;
+  onRefresh: (id: string) => void;
 }
 
-export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete }) => {
+export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete, onRefresh }) => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const handleDeleteClick = (id: string) => {
     setDeleteId(id);
+  };
+
+  const handleRefresh = (id: string) => {
+    onRefresh(id);
   };
 
   const handleDeleteConfirm = () => {
@@ -87,6 +92,12 @@ export const ListingTable: FC<ListingTableProps> = ({ instances, onDelete }) => 
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
+                        {instance.instanceType === enumInstanceType.auth && (
+                          <DropdownMenuItem onClick={() => handleRefresh(instance.id)}>
+                            <RefreshCcwIcon className="mr-2 h-4 w-4" />
+                            Refresh
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

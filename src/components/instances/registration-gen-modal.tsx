@@ -79,6 +79,8 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
         instanceType: values.instanceType,
         apiToken: tokenResponse.access_token,
         expiration: new Date(Date.now() + tokenResponse.expires_in * 1000).toISOString(),
+        clientId: values.clientId,
+        clientSecret: values.clientSecret,
       });
 
       form.reset();

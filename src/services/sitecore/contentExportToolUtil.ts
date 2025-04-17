@@ -1,14 +1,19 @@
-import { IField, ITemplateSchema, IWorksheetSchema } from '@/app/api/export/schema/route';
-import { enumInstanceType } from '@/models/IInstance';
+import { IField, ITemplateSchema, ITemplateSection, IWorksheetSchema } from '@/app/api/export/schema/route';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import * as XLSX from 'xlsx';
 import { GetSearchQuery } from './createGqlQuery';
+import { getXmCloudToken } from './getXmCloudToken';
 import { postToAuthApi } from './postToAuthApi';
-import { CreateQueryTemplate, UpdateQueryTemplate } from './updateTemplate.query';
+import {
+  CreateQueryTemplate,
+  CreateTemplateQuery,
+  SectionFragment,
+  TemplateFieldFragment,
+  UpdateQueryTemplate,
+} from './updateTemplate.query';
 
 export const GenerateContentExport = async (
-  authoringEndpoint: boolean,
-  gqlEndpoint?: string,
-  gqlApiKey?: string,
+  instance: IInstance,
   startItem?: string,
   templates?: string,
   fields?: string,
@@ -19,9 +24,17 @@ export const GenerateContentExport = async (
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
 
+  const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
+  const gqlEndpoint = instance.graphQlEndpoint;
+  let gqlApiKey = instance.apiToken;
+
   ///
   if (!gqlEndpoint || !gqlApiKey) {
     return;
+  }
+
+  if (authoringEndpoint) {
+    gqlApiKey = await RefreshApiKey(instance);
   }
 
   if (loadingModal) {
@@ -141,8 +154,6 @@ export const GenerateContentExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
-
-  alert('Done - check your downloads!');
 };
 
 export const GetSearchQueryResults = async (gqlEndpoint: string, gqlApiKey: string, query: string): Promise<any> => {
@@ -252,9 +263,9 @@ export const GetContentExportResults = async (
 let errorHasBeenDisplayed = false;
 
 export const PostMutationQuery = async (
+  instance: IInstance,
   update: boolean,
   gqlEndpoint?: string,
-  authToken?: string,
   csvData?: any[]
 ): Promise<string[]> => {
   errorHasBeenDisplayed = false;
@@ -263,6 +274,8 @@ export const PostMutationQuery = async (
   if (loadingModal) {
     loadingModal.style.display = 'block';
   }
+
+  const authToken = await RefreshApiKey(instance);
 
   if (!gqlEndpoint || !authToken) {
     alert('Select an Instance with an Auth token');
@@ -343,6 +356,7 @@ export const PostMutationQuery = async (
   }
 
   const errors: string[] = [];
+  let successfullQueries = 0;
 
   try {
     for (var i = 0; i < queries.length; i++) {
@@ -355,6 +369,8 @@ export const PostMutationQuery = async (
           var error = results.errors[j];
           errors.push(error.message.replace(/[\r\n]+/gm, ' '));
         }
+      } else {
+        successfullQueries++;
       }
     }
   } catch (error) {
@@ -373,19 +389,27 @@ export const PostMutationQuery = async (
 
   console.log('ERRORS: ');
   console.log(errors);
+  let messages: string[] = [];
+
+  if (successfullQueries > 0) {
+    messages.push('Successfully created ' + successfullQueries + ' template(s)');
+  }
+
+  if (errors.length > 0) {
+    messages.push(errors.length + ' error(s) occured:');
+    messages = messages.concat(errors);
+  }
   return errors;
 };
 
-export const GenerateSchemaExport = async (
-  authoringEndpoint: boolean,
-  gqlEndpoint?: string,
-  gqlApiKey?: string,
-  startItem?: string
-) => {
+export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
 
-  ///
+  const gqlEndpoint = instance.graphQlEndpoint;
+  let gqlApiKey = instance.apiToken;
+  const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
+
   if (!gqlEndpoint || !gqlApiKey) {
     return;
   }
@@ -393,6 +417,12 @@ export const GenerateSchemaExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'block';
   }
+
+  console.log('Try refresh auth token:');
+  if (authoringEndpoint) {
+    gqlApiKey = await RefreshApiKey(instance);
+  }
+  console.log('Refreshed auth token: ' + gqlApiKey);
 
   const response = await fetch('/api/export/schema', {
     method: 'POST',
@@ -421,6 +451,254 @@ export const GenerateSchemaExport = async (
   }
 
   alert('Done - check your downloads!');
+};
+
+export const PostCreateTemplateQuery = async (instance: IInstance, file: File, csvData?: any[]): Promise<string[]> => {
+  errorHasBeenDisplayed = false;
+  // show loading modal
+  const loadingModal = document.getElementById('loading-modal');
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const authToken = await RefreshApiKey(instance);
+  const gqlEndpoint = instance.graphQlEndpoint;
+
+  console.log('File type: ' + file.type);
+
+  let queries = [];
+
+  if (file.type === 'text/csv') {
+    // don't need to do anything; our csv data is already parsed and passed in
+  } else if (file.name.endsWith('.xlsx')) {
+    console.log('Excel file');
+    const fileData = await file.arrayBuffer();
+    const workbook = XLSX.read(fileData);
+    console.log(workbook);
+    for (var i = 0; i < workbook.SheetNames.length; i++) {
+      var sheet = workbook.Sheets[workbook.SheetNames[i]];
+      const worksheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      console.log(worksheetData);
+      if (!csvData) {
+        csvData = worksheetData;
+      } else {
+        csvData = csvData.concat(worksheetData);
+      }
+    }
+  }
+
+  console.log('Full CSV Data:');
+  console.log(csvData);
+
+  if (!csvData) {
+    return ['Failed to parse file'];
+  }
+
+  let templateSchemas: ITemplateSchema[] = [];
+  let currentSchema: ITemplateSchema | null = null;
+  let query = '';
+  let templateNameIndex = -1;
+  let templateParentIndex = -1;
+  let sectionNameIndex = -1;
+  let fieldNameIndex = -1;
+  let machineNameIndex = -1;
+  let fieldTypeIndex = -1;
+  let defaultValueIndex = -1;
+  let descriptionIndex = -1;
+  let requiredIndex = -1;
+  // iterate through requests
+  for (var i = 0; i < csvData.length; i++) {
+    // header row
+    if (i === 0) {
+      let row = csvData[i];
+      templateNameIndex = row.indexOf('Template');
+      templateParentIndex = row.indexOf('Parent');
+      sectionNameIndex = row.indexOf('Section');
+      fieldNameIndex = row.indexOf('Field Name');
+      machineNameIndex = row.indexOf('Machine Name');
+      if (machineNameIndex === -1) {
+        machineNameIndex = fieldNameIndex;
+      }
+      fieldTypeIndex = row.indexOf('Field Type');
+      defaultValueIndex = row.indexOf('Default Value');
+      descriptionIndex = row.indexOf('Help Text');
+      requiredIndex = row.indexOf('Required');
+
+      if (templateNameIndex === -1 || templateParentIndex === -1 || fieldNameIndex === -1 || fieldTypeIndex === -1) {
+        return ['Missing required fields'];
+      }
+
+      continue;
+    }
+
+    const row = csvData[i];
+
+    // if row has Template Name or is empty, finish previous query and start new query
+    if ((row[templateNameIndex] && row[templateNameIndex] !== '') || row.length === 0) {
+      // finish up previous schema
+      if (currentSchema && currentSchema.templateName !== '' && currentSchema.sections.length > 0) {
+        templateSchemas.push(currentSchema);
+      }
+
+      // set up new schema
+      currentSchema = {
+        templateName: '',
+        templatePath: '',
+        folder: '',
+        sections: [],
+      };
+
+      // if row is not blank:
+      if (row[templateNameIndex] && row[templateNameIndex] !== '') {
+        currentSchema.templateName = row[templateNameIndex];
+        currentSchema.templatePath = row[templateParentIndex];
+      }
+    } else if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
+      // get section
+      var sectionName = sectionNameIndex > -1 ? row[sectionNameIndex] : 'Data';
+      const sectionIndex = currentSchema.sections.findIndex((x) => x.name === sectionName);
+      let section: ITemplateSection;
+      if (sectionIndex === -1) {
+        section = {
+          name: sectionName,
+          fields: [],
+        };
+      } else {
+        section = currentSchema.sections[sectionIndex];
+      }
+
+      if (section.fields.some((field) => field.name == row[fieldNameIndex])) {
+        console.log('SECTION ALREADY CONTAINS FIELD');
+      } else {
+        const field: IField = {
+          name: row[fieldNameIndex],
+          machineName: row[machineNameIndex],
+          fieldType: row[fieldTypeIndex],
+          defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
+          helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
+          required: requiredIndex > -1 ? row[requiredIndex] : false,
+          inheritedFrom: '',
+          template: '',
+          path: '',
+          section: sectionName,
+        };
+        section.fields.push(field);
+      }
+
+      if (sectionIndex === -1) {
+        currentSchema.sections.push(section);
+      } else {
+        currentSchema.sections[sectionIndex] = section;
+      }
+    }
+  }
+
+  // add last template
+  if (currentSchema && currentSchema.templateName !== '' && currentSchema.sections.length > 0) {
+    templateSchemas.push(currentSchema);
+  }
+
+  // now that we have all our schema items, create our queries
+  for (var i = 0; i < templateSchemas.length; i++) {
+    const template = templateSchemas[i];
+    let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName).replace(
+      '[PARENTID]',
+      template.templatePath
+    );
+
+    let sectionsFragments = '';
+    for (var s = 0; s < template.sections.length; s++) {
+      const section = template.sections[s];
+      const sectionFragment = SectionFragment.replace('[SECTIONNAME]', section.name);
+
+      let fieldFragments = '';
+      for (var f = 0; f < section.fields.length; f++) {
+        const field = section.fields[f];
+        fieldFragments += TemplateFieldFragment.replace('[FIELDNAME]', field.machineName ?? field.name)
+          .replace('[FIELDTYPE]', field.fieldType)
+          .replace('[TITLE]', field.name)
+          .replace('[DEFAULT]', field.defaultValue)
+          .replace('[DESCRIPTION]', field.helpText);
+      }
+
+      sectionsFragments += sectionFragment.replace('[FIELDFRAGMENTS]', fieldFragments);
+    }
+
+    query = query.replace('[SECTIONFRAGMENTS]', sectionsFragments);
+
+    console.log(query);
+
+    const jsonQuery = {
+      query: query,
+    };
+    queries.push(jsonQuery);
+  }
+
+  console.log('All Queries:');
+  console.log(queries);
+
+  const errors: string[] = [];
+  let successfullQueries = 0;
+
+  try {
+    for (var i = 0; i < queries.length; i++) {
+      const results = await postToAuthApi(gqlEndpoint, authToken, JSON.stringify(queries[i]));
+      console.log('Results: ');
+      console.log(results);
+
+      if (results.errors) {
+        for (var j = 0; j < results.errors.length; j++) {
+          var error = results.errors[j];
+          errors.push(error.message.replace(/[\r\n]+/gm, ' '));
+        }
+      } else {
+        successfullQueries++;
+      }
+    }
+  } catch (error) {
+    console.log(error);
+
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
+    }
+
+    return [JSON.stringify(error)];
+  }
+
+  if (loadingModal) {
+    loadingModal.style.display = 'none';
+  }
+
+  console.log('ERRORS: ');
+  console.log(errors);
+  let messages: string[] = [];
+
+  if (successfullQueries > 0) {
+    messages.push('Successfully created ' + successfullQueries + ' templates');
+  }
+
+  if (errors.length > 0) {
+    messages.push(errors.length + ' errors occured');
+    messages = messages.concat(errors);
+  }
+
+  return messages;
+};
+
+export const RefreshApiKey = async (instance: IInstance): Promise<string> => {
+  if (instance.instanceType === enumInstanceType.auth) {
+    // automatically refresh instance
+    const tokenResponse = await getXmCloudToken(instance.clientId ?? '', instance.clientSecret ?? '');
+    if (tokenResponse.access_token) {
+      console.log('Refreshed access token');
+      return tokenResponse.access_token;
+    } else {
+      console.log(tokenResponse);
+    }
+  }
+
+  return instance.apiToken ?? '';
 };
 
 export const CleanFieldValue = (value: string): string => {
@@ -569,6 +847,11 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
       'Required',
     ],
   ];
+
+  if (worksheets.length === 0) {
+    alert('No results found');
+    return;
+  }
 
   // add every worksheet to file
   for (var i = 0; i < worksheets.length; i++) {

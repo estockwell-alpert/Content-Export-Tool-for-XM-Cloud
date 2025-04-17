@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { FC, useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { ExportTool } from './export';
 import { ImportTool } from './import';
 
@@ -109,19 +108,6 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
         </div>
       </div>
       <br />
-
-      {
-        <Tabs defaultValue={exportOpen ? 'export' : 'import'} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 border-b border-border">
-            <TabsTrigger onClick={() => (window.location.href = '/content/export')} value="export" className="">
-              Export
-            </TabsTrigger>
-            <TabsTrigger onClick={() => (window.location.href = '/content/import')} value="import" className="">
-              Import
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      }
 
       {activeInstance &&
         (exportOpen ? (
