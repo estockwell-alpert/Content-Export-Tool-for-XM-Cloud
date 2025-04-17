@@ -53,8 +53,8 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
 
       if (file.type === 'text/csv') {
         Papa.parse(file, {
-          header: false,
-          skipEmptyLines: false,
+          header: true,
+          skipEmptyLines: true,
           complete: function (results) {
             setParsedCsvData(results.data);
           },
