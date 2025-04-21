@@ -15,6 +15,10 @@ export const GetBaseTemplateIds = async (
     return results;
   }
 
+  if (!startItem || startItem === '') {
+    return [];
+  }
+
   console.log('Getting base templates for ' + startItem);
 
   console.log('Depth: ' + depth.toString());
@@ -45,10 +49,12 @@ export const GetBaseTemplateIds = async (
     if (!template) continue;
 
     // abort if we're in the system templates
-    if (template.path.startsWith('/sitecore/templates/System/')) {
-      console.log('Abort on system templates - ' + template.path);
+    if (template.path.startsWith('/sitecore/templates/System/') || template.name === 'Standard template') {
+      console.log('Skipping ' + template.Name + ' ' + template.path);
       continue;
     }
+
+    console.log('CURRENT TEMPLATE: ' + template.name + ' - ' + template.path);
 
     results.push(template.itemId);
 
@@ -57,17 +63,17 @@ export const GetBaseTemplateIds = async (
       .replaceAll('-', '')
       .replaceAll('{', '')
       .replaceAll('}', '')
-      .split('|');
+      .split('|')
+      .filter((x: string) => x && x !== '');
 
     if (baseTemplates.length > 0) {
       console.log(
-        baseTemplates.length + ' base templates found on ' + template.name + ' : ' + template.baseTemplate.value
+        baseTemplates.length + ' base templates found on ' + template.name + ': ' + template.baseTemplate.value
       );
       results = results.concat(baseTemplates);
 
       for (var b = 0; b < baseTemplates.length; b++) {
-        if (existingTemplateIds && existingTemplateIds.indexOf(results[b])) {
-          console.log('List already contains ' + results[b]);
+        if (existingTemplateIds && existingTemplateIds.indexOf(baseTemplates[b])) {
           continue;
         }
 
@@ -76,9 +82,11 @@ export const GetBaseTemplateIds = async (
         const baseresults = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, depth++, results);
         results = results.concat(baseresults);
       }
+    } else {
+      console.log('No base templates on ' + template.name);
     }
   }
 
-  console.log('Return ' + JSON.stringify(results));
+  console.log('Finished for ' + startItem);
   return results;
 };

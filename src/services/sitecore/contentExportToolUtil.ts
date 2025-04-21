@@ -413,6 +413,13 @@ export const GetTemplateSchema = async (instance: IInstance, startItem?: string)
     return;
   }
 
+  if (!startItem || startItem === '') {
+    alert(
+      'Enter a start item. If you really want every template in Sitecore, you can enter the ID of the Templates folder. This will take a long time.'
+    );
+    return;
+  }
+
   console.log('Try refresh auth token:');
   if (authoringEndpoint) {
     gqlApiKey = await RefreshApiKey(instance);

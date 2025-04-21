@@ -87,6 +87,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setErrorStartItem(false);
     setErrorTemplates(false);
     setIncludeTemplate(false);
+    setAvailableFields([]);
   };
 
   const validateGuid = (value: string) => {
@@ -216,6 +217,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         return;
       }
 
+      const loadingModal = document.getElementById('loading-modal');
+      if (loadingModal) {
+        loadingModal.style.display = 'block';
+      }
+
       const results = await GetTemplateSchema(activeInstance, templates);
 
       console.log(results);
@@ -236,7 +242,9 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
       setAvailableFields(fieldsList);
 
-      alert('done!');
+      if (loadingModal) {
+        loadingModal.style.display = 'none';
+      }
     }
   };
 
@@ -356,7 +364,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <Button variant="default" size="sm" onClick={runExport}>
                     Run Export
                   </Button>
-                  <Button variant="default" size="sm" onClick={clearAll}>
+                  <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
+                    Save Settings
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={clearAll}>
                     Clear All
                   </Button>
                 </div>
@@ -490,8 +501,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                       </div>
                       {availableFields && availableFields.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          <label className="text-sm font-medium">Available Fields:</label>
-
+                          <label className="text-sm font-medium">Available Fields</label>{' '}
+                          <Button variant="outline" size="sm" onClick={() => setFields(availableFields.join(', '))}>
+                            Select All
+                          </Button>
                           <div className="items-center gap-2 mt-4 fieldsList">
                             {availableFields &&
                               availableFields.map((field, index) => (
@@ -557,6 +570,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
                     <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
                       Save Settings
+                    </Button>
+
+                    <Button variant="secondary" size="sm" onClick={clearAll}>
+                      Clear All
                     </Button>
                   </div>
                 </div>

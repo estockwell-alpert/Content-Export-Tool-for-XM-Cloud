@@ -204,3 +204,7 @@ textarea.error {
 textarea.error:focus {
   --tw-ring-color: color-mix(in oklab, red 50%, transparent);
 }
+
+button {
+  cursor: pointer;
+}

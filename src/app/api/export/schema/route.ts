@@ -17,7 +17,6 @@ export async function POST(request: Request) {
     const fieldSectionTemplateId = '{E269FBB5-3750-427A-9149-7AA950B49301}';
 
     const body = await request.json();
-    console.log(body);
     const { gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint } = body;
 
     // get all templates...
@@ -25,6 +24,8 @@ export async function POST(request: Request) {
     let templatesQuery = {
       query: allTemplatesQuery,
     };
+
+    console.log('Run first template query with startItem: ' + startItem);
 
     const allTemplatesResponse: any = await fetch(gqlEndpoint, {
       method: 'POST',
@@ -35,10 +36,7 @@ export async function POST(request: Request) {
       body: JSON.stringify(templatesQuery),
     });
 
-    console.log(JSON.stringify(templatesQuery));
-
     const jsonResults = await allTemplatesResponse.json();
-    console.log(JSON.stringify(jsonResults));
 
     const templateResults = jsonResults?.data?.search?.results;
 
@@ -48,7 +46,7 @@ export async function POST(request: Request) {
       const template = templateResults[i]?.innerItem;
       if (!template) continue;
 
-      console.log(i + ': ' + template.name + ' ' + template.itemId);
+      console.log('Template ' + i + ': ' + template.name + ' ' + template.itemId);
 
       let templateResult: ITemplateSchema = {
         templateName: template.name,
@@ -74,7 +72,10 @@ export async function POST(request: Request) {
         templateIds = templateIds.concat(baseTemplateIds);
       }
 
-      console.log('All template IDs: ' + JSON.stringify(templateIds));
+      console.log('BEGIN FIELDS QUERIES');
+
+      //return null;
+      // abort here for now
 
       for (var t = 0; t < templateIds.length; t++) {
         const templateId = templateIds[t];
