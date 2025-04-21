@@ -1,24 +1,25 @@
-import { ITemplateSchema } from '@/app/api/export/schema/route';
 import { GetSchemaQuery } from './createGqlQuery';
 
 const templateTemplateId = '{AB86861A-6030-46C5-B394-E8F99E8B87DB}';
 
-export const GetBaseTemplates = async (
+export const GetBaseTemplateIds = async (
   startItem: string,
   gqlEndpoint: string,
   gqlApiKey: string,
-  isBaseTemplate?: boolean,
-  templateSchemaIds?: string[]
-): Promise<ITemplateSchema[]> => {
-  console.log('Getting Templates starting at ' + startItem);
+  depth: number,
+  existingTemplateIds?: string[]
+): Promise<string[]> => {
+  let results: string[] = [];
 
-  // get all templates...
-  if (!templateSchemaIds) {
-    templateSchemaIds = [];
+  if (depth > 5) {
+    return results;
   }
 
-  let templateSchemas: ITemplateSchema[] = [];
+  console.log('Getting base templates for ' + startItem);
 
+  console.log('Depth: ' + depth.toString());
+
+  // get all templates...
   const allTemplatesQuery = GetSchemaQuery(startItem, templateTemplateId);
   let templatesQuery = {
     query: allTemplatesQuery,
@@ -37,61 +38,47 @@ export const GetBaseTemplates = async (
 
   const templateResults = jsonResults?.data?.search?.results;
 
+  console.log(templateResults.length + ' results for ' + startItem);
+
   for (var i = 0; i < templateResults.length; i++) {
     const template = templateResults[i]?.innerItem;
     if (!template) continue;
 
-    console.log(i + ': ' + template.name + ' ' + template.itemId);
-
-    let templateResult: ITemplateSchema = {
-      templateName: template.name,
-      id: template.itemId,
-      isBaseTemplate: isBaseTemplate ?? false,
-      templatePath: template.path,
-      folder: template.parent?.name,
-      sections: [],
-    };
-
-    templateSchemas.push(templateResult);
-    templateSchemaIds?.push(templateResult.id);
-
-    // if this is a system template, end recursion
-    if (templateResult.templatePath.startsWith('/sitecore/templates/System/')) {
-      console.log(template.name + ' is a system template, skipping base templates');
-      return templateSchemas;
+    // abort if we're in the system templates
+    if (template.path.startsWith('/sitecore/templates/System/')) {
+      console.log('Abort on system templates - ' + template.path);
+      continue;
     }
 
-    // need to get baseTemplate recursively
-    let templateIds: string[] = [];
-    const baseTemplates: string[] = template.baseTemplate?.value
+    results.push(template.itemId);
+
+    let baseTemplates = template.baseTemplate?.value
       ?.toLowerCase()
       .replaceAll('-', '')
       .replaceAll('{', '')
       .replaceAll('}', '')
-      .split('|')
-      .filter((x: string) => x !== '00000000000000000000000000000000');
-    templateIds = templateIds.concat(baseTemplates);
+      .split('|');
 
-    console.log(templateIds.length + ' base templates for ' + template.name + ': ' + JSON.stringify(baseTemplates));
-
-    for (let b = 0; b < baseTemplates.length; b++) {
-      // skip if the base template has already been retrieved
-      if (templateSchemaIds.indexOf(baseTemplates[b]) > -1) {
-        console.log('Already got base template ' + baseTemplates[b]);
-        continue;
-      }
-
-      const baseTemplateTemplates = await GetBaseTemplates(
-        baseTemplates[b],
-        gqlEndpoint,
-        gqlApiKey,
-        true,
-        templateSchemaIds
+    if (baseTemplates.length > 0) {
+      console.log(
+        baseTemplates.length + ' base templates found on ' + template.name + ' : ' + template.baseTemplate.value
       );
-      templateSchemas = templateSchemas.concat(baseTemplateTemplates);
+      results = results.concat(baseTemplates);
+
+      for (var b = 0; b < baseTemplates.length; b++) {
+        if (existingTemplateIds && existingTemplateIds.indexOf(results[b])) {
+          console.log('List already contains ' + results[b]);
+          continue;
+        }
+
+        console.log('Get base templates for ' + baseTemplates[b] + '...');
+
+        const baseresults = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, depth++, results);
+        results = results.concat(baseresults);
+      }
     }
   }
-  console.log('All templates: ' + JSON.stringify(templateSchemas));
 
-  return templateSchemas;
+  console.log('Return ' + JSON.stringify(results));
+  return results;
 };

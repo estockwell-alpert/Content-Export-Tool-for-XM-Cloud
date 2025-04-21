@@ -554,7 +554,6 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       currentSchema = {
         templateName: '',
         templatePath: '',
-        id: '',
         folder: '',
         sections: [],
       };
