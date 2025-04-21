@@ -1,3 +1,4 @@
+import { GetBaseTemplates } from '@/services/sitecore/apiUtil';
 import { GetSchemaQuery } from '@/services/sitecore/createGqlQuery';
 import { NextResponse } from 'next/server';
 
@@ -19,141 +20,97 @@ export async function POST(request: Request) {
     console.log(body);
     const { gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint } = body;
 
-    // get all templates...
-    const allTemplatesQuery = GetSchemaQuery(startItem, templateTemplateId);
-    let templatesQuery = {
-      query: allTemplatesQuery,
-    };
+    const allTemplates = await GetBaseTemplates(startItem, gqlEndpoint, gqlApiKey);
 
-    const allTemplatesResponse: any = await fetch(gqlEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + gqlApiKey,
-      },
-      body: JSON.stringify(templatesQuery),
-    });
-
-    console.log(JSON.stringify(templatesQuery));
-
-    const jsonResults = await allTemplatesResponse.json();
-    console.log(JSON.stringify(jsonResults));
-
-    const templateResults = jsonResults?.data?.search?.results;
-
-    console.log('Total templates: ' + templateResults?.length);
-
-    for (var i = 0; i < templateResults.length; i++) {
-      const template = templateResults[i]?.innerItem;
+    for (var i = 0; i < allTemplates.length; i++) {
+      const template = allTemplates[i];
       if (!template) continue;
 
-      console.log(i + ': ' + template.name + ' ' + template.itemId);
-
-      let templateResult: ITemplateSchema = {
-        templateName: template.name,
-        templatePath: template.path,
-        folder: template.parent?.name,
-        sections: [],
-      };
+      console.log(i + ': ' + template.templateName + ' ' + template.id);
 
       let sections: ITemplateSection[] = [];
 
-      let templateIds = [];
-      templateIds.push(template.itemId);
+      const templateId = template.id;
+      if (templateId === '') {
+        console.log('Do not run empty query');
+        continue;
+      }
+      console.log('Getting fields for ' + templateId);
+      const allFieldsQuery = GetSchemaQuery(templateId, fieldTemplateId);
+      let fieldsQuery = {
+        query: allFieldsQuery,
+      };
 
-      const baseTemplates = template.baseTemplate?.value
-        ?.toLowerCase()
-        .replaceAll('-', '')
-        .replaceAll('{', '')
-        .replaceAll('}', '')
-        .split('|');
-      templateIds = templateIds.concat(baseTemplates);
+      const fieldsResponse: any = await fetch(gqlEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + gqlApiKey,
+        },
+        body: JSON.stringify(fieldsQuery),
+      });
 
-      console.log('All template IDs: ' + JSON.stringify(templateIds));
+      const fieldResults = await fieldsResponse.json();
 
-      for (var t = 0; t < templateIds.length; t++) {
-        const templateId = templateIds[t];
-        if (templateId === '') {
-          console.log('Do not run empty query');
-          continue;
+      const fieldsJson = fieldResults?.data?.search?.results;
+      console.log(JSON.stringify(fieldsJson));
+
+      for (var f = 0; f < fieldsJson.length; f++) {
+        const field = fieldsJson[f].innerItem;
+
+        console.log('');
+        console.log('Field ' + f + ': ' + field.name);
+
+        var sectionName = field?.parent?.name;
+        const sectionIndex = sections.findIndex((x) => x.name === sectionName);
+        let section: ITemplateSection;
+        if (sectionIndex === -1) {
+          section = {
+            name: sectionName,
+            fields: [],
+          };
+        } else {
+          section = sections[sectionIndex];
         }
-        console.log('Getting fields for ' + templateId);
-        const allFieldsQuery = GetSchemaQuery(templateId, fieldTemplateId);
-        let fieldsQuery = {
-          query: allFieldsQuery,
+
+        let workflow = field.workflow?.value;
+        let required = false;
+        // field.workflow?.value?.contains('{59D4EE10-627C-4FD3-A964-61A88B092CBC}')
+        if (workflow && workflow.toString().indexOf('{59D4EE10-627C-4FD3-A964-61A88B092CBC}') > -1) {
+          required = true;
+        }
+
+        console.log('Current template: ' + templateId);
+
+        // update section
+        let fieldObj: IField = {
+          template: '',
+          path: '',
+          section: sectionName,
+          name: field.title?.value,
+          machineName: field.name,
+          fieldType: field.type?.value,
+          required: required ? true : undefined,
+          defaultValue: field.defaultValue?.value,
+          helpText: field.helpText?.value,
+          inheritedFrom: field.parent?.parent?.itemId !== template.id ? field.parent?.parent?.name : '',
         };
 
-        const fieldsResponse: any = await fetch(gqlEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + gqlApiKey,
-          },
-          body: JSON.stringify(fieldsQuery),
-        });
+        if (section.fields.some((field) => field.machineName == fieldObj.name)) {
+          console.log('SECTION ALREADY CONTAINS FIELD');
+        } else {
+          section.fields.push(fieldObj);
+        }
 
-        const fieldResults = await fieldsResponse.json();
-
-        const fieldsJson = fieldResults?.data?.search?.results;
-        console.log(JSON.stringify(fieldsJson));
-
-        for (var f = 0; f < fieldsJson.length; f++) {
-          const field = fieldsJson[f].innerItem;
-
-          console.log('');
-          console.log('Field ' + f + ': ' + field.name);
-
-          var sectionName = field?.parent?.name;
-          const sectionIndex = sections.findIndex((x) => x.name === sectionName);
-          let section: ITemplateSection;
-          if (sectionIndex === -1) {
-            section = {
-              name: sectionName,
-              fields: [],
-            };
-          } else {
-            section = sections[sectionIndex];
-          }
-
-          let workflow = field.workflow?.value;
-          let required = false;
-          // field.workflow?.value?.contains('{59D4EE10-627C-4FD3-A964-61A88B092CBC}')
-          if (workflow && workflow.toString().indexOf('{59D4EE10-627C-4FD3-A964-61A88B092CBC}') > -1) {
-            required = true;
-          }
-
-          console.log('Current template: ' + templateId);
-
-          // update section
-          let fieldObj: IField = {
-            template: '',
-            path: '',
-            section: sectionName,
-            name: field.title?.value,
-            machineName: field.name,
-            fieldType: field.type?.value,
-            required: required ? true : undefined,
-            defaultValue: field.defaultValue?.value,
-            helpText: field.helpText?.value,
-            inheritedFrom: field.parent?.parent?.itemId !== template.itemId ? field.parent?.parent?.name : '',
-          };
-
-          if (section.fields.some((field) => field.name == fieldObj.name)) {
-            console.log('SECTION ALREADY CONTAINS FIELD');
-          } else {
-            section.fields.push(fieldObj);
-          }
-
-          if (sectionIndex === -1) {
-            sections.push(section);
-          } else {
-            sections[sectionIndex] = section;
-          }
+        if (sectionIndex === -1) {
+          sections.push(section);
+        } else {
+          sections[sectionIndex] = section;
         }
       }
 
-      templateResult.sections = sections;
-      results.push(templateResult);
+      template.sections = sections;
+      results.push(template);
     }
 
     console.log(JSON.stringify(results));
@@ -172,6 +129,8 @@ export interface IWorksheetSchema {
 
 export interface ITemplateSchema {
   templateName: string;
+  isBaseTemplate: boolean;
+  id: string;
   templatePath: string;
   folder: string;
   sections: ITemplateSection[];

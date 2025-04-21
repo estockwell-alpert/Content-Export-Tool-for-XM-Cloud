@@ -404,20 +404,13 @@ export const PostMutationQuery = async (
   return errors;
 };
 
-export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
-  // show loading modal
-  const loadingModal = document.getElementById('loading-modal');
-
+export const GetTemplateSchema = async (instance: IInstance, startItem?: string): Promise<any> => {
   const gqlEndpoint = instance.graphQlEndpoint;
   let gqlApiKey = instance.apiToken;
   const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
 
   if (!gqlEndpoint || !gqlApiKey) {
     return;
-  }
-
-  if (loadingModal) {
-    loadingModal.style.display = 'block';
   }
 
   console.log('Try refresh auth token:');
@@ -442,6 +435,18 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   console.log(results);
   const templates = results.templates;
+
+  return templates;
+};
+
+export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
+  const loadingModal = document.getElementById('loading-modal');
+
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const templates = await GetTemplateSchema(instance, startItem);
 
   // CSV:
   //const csvString = ResultsToCsv(templates);
@@ -549,6 +554,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       currentSchema = {
         templateName: '',
         templatePath: '',
+        id: '',
         folder: '',
         sections: [],
       };
