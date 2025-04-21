@@ -33,6 +33,8 @@ export const GenerateContentExport = async (
     return;
   }
 
+  includeLang = true; // since Auth export exports all languages by default, just always show the column. Check if Edge does all langs by default too
+
   if (authoringEndpoint) {
     gqlApiKey = await RefreshApiKey(instance);
   }
@@ -511,6 +513,8 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   for (var i = 0; i < csvData.length; i++) {
     // header row
     if (i === 0) {
+      // TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
+
       let row = csvData[i];
       templateNameIndex = row.indexOf('Template');
       templateParentIndex = row.indexOf('Parent');
