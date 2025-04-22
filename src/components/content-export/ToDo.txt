@@ -8,3 +8,13 @@ Add Parent (id) to Schema export so that import/export file is 1:1 - MAYBE NOT B
 Add Browse Fields for Auth endpoint (can use same logic as the schema export!)
 
 Auth export defaults to export in all languages. Fix it to default to the main site language
+
+
+
+JEFF:
+
+Update IMPORT for new export format (Section on its own line)
+
+Additional formatting would be a nice-to-have but would probably take some time to figure out how to programmatically do that in Excel.
+    Create groups for each template
+    Add colors and borders to highlight where templates start/end
