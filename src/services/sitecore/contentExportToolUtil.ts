@@ -866,6 +866,8 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
       const sectionName = section.name;
 
+      csvData.push(',,' + sectionName);
+
       for (var k = 0; k < section.fields.length; k++) {
         const field = section.fields[k];
         const name = field.name;
@@ -879,8 +881,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
         let resultRow = '';
 
-        resultRow += ',,';
-        resultRow += CleanFieldValue(sectionName) + ',';
+        resultRow += ',,,';
         resultRow += name + ',';
         resultRow += CleanFieldValue(machineName) + ',';
         resultRow += fieldType + ',';
@@ -951,6 +952,18 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
     worksheet.data.push(templateRow);
 
     for (var j = 0; j < template.sections.length; j++) {
+      worksheet.data.push({
+        template: '',
+        path: '',
+        section: template.sections[j].name,
+        name: '',
+        machineName: '',
+        fieldType: '',
+        source: '',
+        defaultValue: '',
+        helpText: '',
+        inheritedFrom: '',
+      });
       const dataLines = template.sections[j].fields;
       worksheet.data = worksheet.data.concat(dataLines);
     }

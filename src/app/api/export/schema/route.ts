@@ -136,7 +136,7 @@ export async function POST(request: Request) {
           let fieldObj: IField = {
             template: '',
             path: '',
-            section: sectionName,
+            section: '',
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
