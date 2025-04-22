@@ -53,7 +53,13 @@ export async function POST(request: Request) {
         templatePath: template.path,
         folder: template.parent?.name,
         sections: [],
+        renderingParams: false,
       };
+
+      if (templateResult.folder === 'Rendering Parameters') {
+        templateResult.renderingParams = true;
+        templateResult.folder = template.parent?.parent?.name;
+      }
 
       let sections: ITemplateSection[] = [];
 
@@ -128,10 +134,6 @@ export async function POST(request: Request) {
             required = true;
           }
 
-          console.log('Current template: ' + templateId);
-          console.log('Field: ' + JSON.stringify(field));
-          console.log('Source: ' + field.source?.value);
-
           // update section
           let fieldObj: IField = {
             template: '',
@@ -165,8 +167,6 @@ export async function POST(request: Request) {
       results.push(templateResult);
     }
 
-    console.log(JSON.stringify(results));
-
     return NextResponse.json({ templates: results });
   } catch (error) {
     console.error('Error posting query:', error);
@@ -182,6 +182,7 @@ export interface IWorksheetSchema {
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
+  renderingParams: boolean;
   folder: string;
   sections: ITemplateSection[];
 }

@@ -565,7 +565,9 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
     loadingModal.style.display = 'block';
   }
 
-  const templates = await GetTemplateSchema(instance, startItem);
+  let templates = await GetTemplateSchema(instance, startItem);
+
+  templates = templates?.sort(compare);
 
   // CSV:
   //const csvString = ResultsToCsv(templates);
@@ -578,6 +580,16 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   alert('Done - check your downloads!');
 };
+
+function compare(a: any, b: any) {
+  if (a.templateName < b.templateName) {
+    return -1;
+  } else if (a.templateName > b.templateName) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
 export const PostCreateTemplateQuery = async (instance: IInstance, file: File, csvData?: any[]): Promise<string[]> => {
   errorHasBeenDisplayed = false;
@@ -677,6 +689,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         templatePath: '',
         folder: '',
         sections: [],
+        renderingParams: false,
       };
 
       // if row is not blank:
@@ -937,7 +950,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
     }
 
     const templateRow: IField = {
-      template: template.templateName,
+      template: template.templateName + (template.renderingParams ? ' (Rendering Parameters)' : ''),
       path: template.templatePath,
       section: '',
       name: '',
