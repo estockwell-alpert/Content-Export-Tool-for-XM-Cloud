@@ -48,6 +48,14 @@ export const EdgeSearchQueryTemplate = gql`
     }
 }`;
 
+export const EdgeItemQueryTemplate = gql`
+  {
+    item(path: "[ID]", language: "[LANG]") {
+      name
+    }
+  }
+`;
+
 export const AuthoringSearchQueryTemplate = gql`
   {
     search(

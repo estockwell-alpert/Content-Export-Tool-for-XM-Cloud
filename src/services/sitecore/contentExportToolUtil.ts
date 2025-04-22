@@ -19,7 +19,8 @@ export const GenerateContentExport = async (
   fields?: string,
   languages?: string,
   includeTemplate?: boolean,
-  includeLang?: boolean
+  includeLang?: boolean,
+  convertGuids?: boolean
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -43,21 +44,16 @@ export const GenerateContentExport = async (
     loadingModal.style.display = 'block';
   }
 
-  console.log(fields);
-
-  const response = await fetch('/api/export', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, languages, authoringEndpoint }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const results = await response.json();
+  const results = await MakePostRequest(
+    gqlEndpoint,
+    gqlApiKey,
+    startItem ?? '',
+    templates ?? '',
+    fields ?? '',
+    languages ?? '',
+    authoringEndpoint,
+    false
+  );
 
   console.log(results);
 
@@ -82,6 +78,8 @@ export const GenerateContentExport = async (
     }
   }
   csvData.push(headerRow);
+
+  let guidFieldDictionary: { [id: string]: [name: string] } = {};
 
   for (var i = 0; i < results.length; i++) {
     let result = results[i];
@@ -126,7 +124,37 @@ export const GenerateContentExport = async (
           continue;
         }
 
-        const fieldValue = result[field]?.value ?? 'n/a';
+        let fieldValue = result[field]?.value ?? 'n/a';
+
+        // check if field is guid/guids
+        if (convertGuids && fieldValue !== '' && validateGuid(fieldValue)) {
+          console.log('Value is a guid; get the item name');
+
+          if (guidFieldDictionary[fieldValue]) {
+            fieldValue = guidFieldDictionary[fieldValue];
+          } else {
+            const linkedItemResults = await MakePostRequest(
+              gqlEndpoint,
+              gqlApiKey,
+              fieldValue,
+              '',
+              '',
+              result.language?.name ?? '',
+              authoringEndpoint,
+              !authoringEndpoint
+            );
+
+            let linkedItemResult = linkedItemResults;
+            if (authoringEndpoint) {
+              linkedItemResult = linkedItemResults[i]?.innerItem;
+            }
+
+            let itemName = linkedItemResult?.name;
+            guidFieldDictionary[fieldValue] = itemName;
+
+            fieldValue = itemName;
+          }
+        }
 
         let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
         // double quote to escape commas
@@ -156,6 +184,60 @@ export const GenerateContentExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
+};
+
+export const validateGuid = (value: string) => {
+  const regex = /^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}\}?$/i;
+
+  var values = value.split(',');
+  for (var i = 0; i < values.length; i++) {
+    var val = values[i].trim();
+
+    if (!val || val === '') continue;
+
+    if (!val.match(regex)) {
+      console.log(val + ' is not a valid guid');
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const MakePostRequest = async (
+  gqlEndpoint: string,
+  gqlApiKey: string,
+  startItem: string,
+  templates: string,
+  fields: string,
+  languages: string,
+  authoringEndpoint: boolean,
+  itemQuery: boolean
+): Promise<any> => {
+  const response = await fetch('/api/export', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      gqlEndpoint,
+      gqlApiKey,
+      startItem,
+      templates,
+      fields,
+      languages,
+      authoringEndpoint,
+      itemQuery,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const results = await response.json();
+
+  return results;
 };
 
 export const GetSearchQueryResults = async (gqlEndpoint: string, gqlApiKey: string, query: string): Promise<any> => {

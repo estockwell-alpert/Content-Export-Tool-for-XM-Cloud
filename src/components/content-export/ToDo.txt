@@ -1,9 +1,10 @@
 IMPORT TEMPLATES:
 https://docs.sheetjs.com/docs/getting-started/examples/import
 
-Import data from XLSX
-
 Export data to XLSX
 
-Add Parent (id) to Schema export so that import/export file is 1:1
+Add Parent (id) to Schema export so that import/export file is 1:1 - MAYBE NOT BOTHER
 
+Add Browse Fields for Auth endpoint (can use same logic as the schema export!)
+
+Auth export defaults to export in all languages. Fix it to default to the main site language

@@ -4,6 +4,7 @@ import {
   GenerateContentExport,
   GenerateSchemaExport,
   GetTemplateSchema,
+  validateGuid,
 } from '@/services/sitecore/contentExportToolUtil';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
 import { FC, useEffect, useState } from 'react';
@@ -32,6 +33,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [createdBy, setCreatedBy] = useState<boolean>();
   const [updatedDate, setUpdatedDate] = useState<boolean>();
   const [updatedBy, setUpdatedBy] = useState<boolean>();
+  const [convertGuids, setConvertGuids] = useState<boolean>();
   const [includeTemplate, setIncludeTemplate] = useState<boolean>();
   const [includeLang, setIncludeLang] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,6 +83,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setCreatedBy(false);
     setCreatedDate(false);
     setUpdatedBy(false);
+    setConvertGuids(false);
     setUpdatedDate(false);
     setIncludeLang(false);
     setAvailableFields([]);
@@ -88,24 +91,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setErrorTemplates(false);
     setIncludeTemplate(false);
     setAvailableFields([]);
-  };
-
-  const validateGuid = (value: string) => {
-    const regex = /^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}\}?$/i;
-
-    var values = value.split(',');
-    for (var i = 0; i < values.length; i++) {
-      var val = values[i].trim();
-
-      if (!val || val === '') continue;
-
-      if (!val.match(regex)) {
-        console.log(val + ' is not a valid guid');
-        return false;
-      }
-    }
-
-    return true;
   };
 
   const runExport = async () => {
@@ -137,7 +122,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       itemFields,
       languages,
       includeTemplate,
-      includeLang
+      includeLang,
+      convertGuids
     );
   };
 
@@ -307,6 +293,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setCreatedDate(setting.createdDate);
     setUpdatedBy(setting.updatedBy);
     setUpdatedDate(setting.updatedDate);
+    setConvertGuids(setting.convertGuids);
   };
 
   return (
@@ -525,11 +512,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     {/* to do: make collapsible, fix to work fully with Edge */}
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Standard Fields</label>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setFields('')}>
-                          Clear
-                        </Button>
-                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <input
@@ -559,6 +541,20 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                       <input type="checkbox" checked={updatedBy} onChange={() => setUpdatedBy(!updatedBy)} />
                       <label>Updated By</label>
                     </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Options</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" checked={convertGuids} onChange={() => setConvertGuids(!convertGuids)} />
+                      <label>Export Linked Item Names</label>
+                    </div>
+                    <Alert variant="default" className="mt-2">
+                      <AlertDescription className="text-xs">
+                        By default, all fields are exported as raw values. Check this box to export the Name of linked
+                        items instead of Guid ID
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 </Card>
 
