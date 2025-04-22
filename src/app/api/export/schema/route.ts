@@ -66,17 +66,8 @@ export async function POST(request: Request) {
       let templateIds = [];
       templateIds.push(template.itemId);
 
-      let baseTemplates = template.baseTemplate?.value
-        ?.toLowerCase()
-        .replaceAll('-', '')
-        .replaceAll('{', '')
-        .replaceAll('}', '')
-        .split('|');
-
-      for (var b = 0; b < baseTemplates.length; b++) {
-        let baseTemplateIds = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, 0);
-        templateIds = templateIds.concat(baseTemplateIds);
-      }
+      let baseTemplateIds = await GetBaseTemplateIds(template.itemId, gqlEndpoint, gqlApiKey, 0);
+      templateIds = templateIds.concat(baseTemplateIds);
 
       console.log('BEGIN FIELDS QUERIES');
 
