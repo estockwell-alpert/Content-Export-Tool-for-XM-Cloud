@@ -1,6 +1,11 @@
 import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { ISettings } from '@/models/ISettings';
-import { GenerateContentExport, GenerateSchemaExport } from '@/services/sitecore/contentExportToolUtil';
+import {
+  GenerateContentExport,
+  GenerateSchemaExport,
+  GetTemplateSchema,
+  validateGuid,
+} from '@/services/sitecore/contentExportToolUtil';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
 import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -28,6 +33,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [createdBy, setCreatedBy] = useState<boolean>();
   const [updatedDate, setUpdatedDate] = useState<boolean>();
   const [updatedBy, setUpdatedBy] = useState<boolean>();
+  const [convertGuids, setConvertGuids] = useState<boolean>();
   const [includeTemplate, setIncludeTemplate] = useState<boolean>();
   const [includeLang, setIncludeLang] = useState<boolean>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +42,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorStartItem, setErrorStartItem] = useState<boolean>(false);
   const [errorTemplatesStartItem, setErrorTemplatesStartItem] = useState<boolean>(false);
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
+  const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validateGuid(event.target.value ?? '')) {
@@ -66,22 +73,24 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setTemplateNames(event.target.value);
   };
 
-  const validateGuid = (value: string) => {
-    const regex = /^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}\}?$/i;
-
-    var values = value.split(',');
-    for (var i = 0; i < values.length; i++) {
-      var val = values[i].trim();
-
-      if (!val || val === '') continue;
-
-      if (!val.match(regex)) {
-        console.log(val + ' is not a valid guid');
-        return false;
-      }
-    }
-
-    return true;
+  const clearAll = () => {
+    setSavedSettings([]);
+    setStartItem('');
+    setTemplates('');
+    setTemplatesStartItem('');
+    setFields('');
+    setLanguages('');
+    setCreatedBy(false);
+    setCreatedDate(false);
+    setUpdatedBy(false);
+    setConvertGuids(false);
+    setUpdatedDate(false);
+    setIncludeLang(false);
+    setAvailableFields([]);
+    setErrorStartItem(false);
+    setErrorTemplates(false);
+    setIncludeTemplate(false);
+    setAvailableFields([]);
   };
 
   const runExport = async () => {
@@ -113,7 +122,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       itemFields,
       languages,
       includeTemplate,
-      includeLang
+      includeLang,
+      convertGuids
     );
   };
 
@@ -143,52 +153,85 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
 
   // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
-  const browseFields = () => {
+  const browseFields = async () => {
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
       alert('You must select an instance first');
       return;
     }
 
-    if (!templateNames) {
-      alert('Enter a template name');
-      return;
-    }
+    let fieldsList: string[] = [];
 
-    console.log(activeInstance);
+    if (activeInstance.instanceType == enumInstanceType.edge) {
+      if (!templateNames) {
+        alert('Enter a template name');
+        return;
+      }
 
-    const query = SchemaTemplate.replace('[templatename]', templateNames.trim());
+      const query = SchemaTemplate.replace('[templatename]', templateNames.trim());
+      console.log(query);
 
-    console.log(query);
-
-    let fieldsList = [];
-
-    fetch(activeInstance.graphQlEndpoint, {
-      method: 'POST',
-      headers: new Headers({ sc_apikey: activeInstance.apiToken, 'content-type': 'application/json' }),
-      body: query,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // parse data
-        console.log(data);
-
-        const results = data.data.__type.fields;
-        console.log(results);
-
-        for (var i = 0; i < results.length; i++) {
-          console.log(results[i]);
-          const result = results[i];
-          const field = result.name;
-
-          fieldsList.push(field);
-        }
-
-        setAvailableFields(fieldsList);
+      fetch(activeInstance.graphQlEndpoint, {
+        method: 'POST',
+        headers: new Headers({ sc_apikey: activeInstance.apiToken, 'content-type': 'application/json' }),
+        body: query,
       })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          // parse data
+          console.log(data);
+
+          const results = data.data.__type.fields;
+          console.log(results);
+
+          for (var i = 0; i < results.length; i++) {
+            console.log(results[i]);
+            const result = results[i];
+            const field = result.name;
+
+            fieldsList.push(field);
+          }
+
+          setAvailableFields(fieldsList);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    } else {
+      if (!templates) {
+        alert('Enter at least one template ID in the Templates field');
+        return;
+      }
+
+      const loadingModal = document.getElementById('loading-modal');
+      if (loadingModal) {
+        loadingModal.style.display = 'block';
+      }
+
+      const results = await GetTemplateSchema(activeInstance, templates);
+
+      console.log(results);
+
+      for (let i = 0; i < results.length; i++) {
+        const template = results[i];
+        for (let s = 0; s < template.sections.length; s++) {
+          const section = template.sections[s];
+          for (var f = 0; f < section.fields.length; f++) {
+            var field = section.fields[f];
+            var fieldName = field.machineName;
+            if (fieldsList.indexOf(fieldName) === -1) {
+              fieldsList.push(fieldName);
+            }
+          }
+        }
+      }
+
+      setAvailableFields(fieldsList);
+
+      if (loadingModal) {
+        loadingModal.style.display = 'none';
+      }
+    }
   };
 
   useEffect(() => {
@@ -250,6 +293,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setCreatedDate(setting.createdDate);
     setUpdatedBy(setting.updatedBy);
     setUpdatedDate(setting.updatedDate);
+    setConvertGuids(setting.convertGuids);
   };
 
   return (
@@ -302,6 +346,19 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
             <CardHeader>
               <CardTitle>Export Content</CardTitle>
               <CardDescription>Export content from your Sitecore instance</CardDescription>
+              <div className="">
+                <div className="flex items-center gap-2 mt-4">
+                  <Button variant="default" size="sm" onClick={runExport}>
+                    Run Export
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
+                    Save Settings
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={clearAll}>
+                    Clear All
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -401,14 +458,60 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                       className="text-sm"
                     />
 
+                    <div className="">
+                      {activeInstance?.instanceType == enumInstanceType.edge && (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium">
+                              Browse Fields - input template names below, then click button to see available fields
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setFields('')}>
+                                Clear
+                              </Button>
+                            </div>
+                          </div>
+                          <Textarea
+                            placeholder="e.g. Person, Whitepaper, LandingPage"
+                            onChange={handleTemplateNames}
+                            className="text-sm"
+                          ></Textarea>{' '}
+                        </>
+                      )}
+
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center gap-2 mt-4">
+                          <Button variant="default" size="sm" onClick={() => browseFields()}>
+                            Browse Fields
+                          </Button>
+                        </div>
+                      </div>
+                      {availableFields && availableFields.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <label className="text-sm font-medium">Available Fields</label>{' '}
+                          <Button variant="outline" size="sm" onClick={() => setFields(availableFields.join(', '))}>
+                            Select All
+                          </Button>
+                          <div className="items-center gap-2 mt-4 fieldsList">
+                            {availableFields &&
+                              availableFields.map((field, index) => (
+                                <p key={index}>
+                                  <a
+                                    className={fieldIsSelected(field) ? 'disabled' : ''}
+                                    onDoubleClick={() => addField(field)}
+                                  >
+                                    {field}
+                                  </a>
+                                </p>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     {/* to do: make collapsible, fix to work fully with Edge */}
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Standard Fields</label>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setFields('')}>
-                          Clear
-                        </Button>
-                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <input
@@ -438,67 +541,38 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                       <input type="checkbox" checked={updatedBy} onChange={() => setUpdatedBy(!updatedBy)} />
                       <label>Updated By</label>
                     </div>
-                    <div className="mt-4 space-y-2">
-                      <div className="flex items-center gap-2 mt-4">
-                        <Button variant="default" size="sm" onClick={runExport}>
-                          Run Export
-                        </Button>
 
-                        <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
-                          Save Settings
-                        </Button>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Options</label>
                     </div>
-
-                    <br />
-                    <br />
-
-                    <div className="">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">
-                          Browse Fields - input template names below, then click button to see available fields
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => setFields('')}>
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-                      <Textarea
-                        placeholder="e.g. Person, Whitepaper, LandingPage"
-                        onChange={handleTemplateNames}
-                        className="text-sm"
-                      ></Textarea>
-
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center gap-2 mt-4">
-                          <Button variant="default" size="sm" onClick={() => browseFields()}>
-                            Browse Fields
-                          </Button>
-                        </div>
-                      </div>
-                      {availableFields && availableFields.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          <label className="text-sm font-medium">Available Fields:</label>
-
-                          <div className="items-center gap-2 mt-4 fieldsList">
-                            {availableFields &&
-                              availableFields.map((field, index) => (
-                                <p key={index}>
-                                  <a
-                                    className={fieldIsSelected(field) ? 'disabled' : ''}
-                                    onDoubleClick={() => addField(field)}
-                                  >
-                                    {field}
-                                  </a>
-                                </p>
-                              ))}
-                          </div>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" checked={convertGuids} onChange={() => setConvertGuids(!convertGuids)} />
+                      <label>Export Linked Item Names</label>
                     </div>
+                    <Alert variant="default" className="mt-2">
+                      <AlertDescription className="text-xs">
+                        By default, all fields are exported as raw values. Check this box to export the Name of linked
+                        items instead of Guid ID
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 </Card>
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="default" size="sm" onClick={runExport}>
+                      Run Export
+                    </Button>
+
+                    <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
+                      Save Settings
+                    </Button>
+
+                    <Button variant="secondary" size="sm" onClick={clearAll}>
+                      Clear All
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <SaveSettingsModal open={isModalOpen} onOpenChange={setIsModalOpen} onSubmit={handleSaveSettings} />

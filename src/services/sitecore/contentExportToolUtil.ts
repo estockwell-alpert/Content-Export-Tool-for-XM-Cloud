@@ -19,7 +19,8 @@ export const GenerateContentExport = async (
   fields?: string,
   languages?: string,
   includeTemplate?: boolean,
-  includeLang?: boolean
+  includeLang?: boolean,
+  convertGuids?: boolean
 ) => {
   // show loading modal
   const loadingModal = document.getElementById('loading-modal');
@@ -33,6 +34,8 @@ export const GenerateContentExport = async (
     return;
   }
 
+  includeLang = true; // since Auth export exports all languages by default, just always show the column. Check if Edge does all langs by default too
+
   if (authoringEndpoint) {
     gqlApiKey = await RefreshApiKey(instance);
   }
@@ -41,21 +44,16 @@ export const GenerateContentExport = async (
     loadingModal.style.display = 'block';
   }
 
-  console.log(fields);
-
-  const response = await fetch('/api/export', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, startItem, templates, fields, languages, authoringEndpoint }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const results = await response.json();
+  const results = await MakePostRequest(
+    gqlEndpoint,
+    gqlApiKey,
+    startItem ?? '',
+    templates ?? '',
+    fields ?? '',
+    languages ?? '',
+    authoringEndpoint,
+    false
+  );
 
   console.log(results);
 
@@ -80,6 +78,8 @@ export const GenerateContentExport = async (
     }
   }
   csvData.push(headerRow);
+
+  let guidFieldDictionary: { [id: string]: [name: string] } = {};
 
   for (var i = 0; i < results.length; i++) {
     let result = results[i];
@@ -124,7 +124,46 @@ export const GenerateContentExport = async (
           continue;
         }
 
-        const fieldValue = result[field]?.value ?? 'n/a';
+        let fieldValue = result[field]?.value ?? 'n/a';
+
+        // check if field is guid/guids
+        if (convertGuids && fieldValue !== '' && validateMultiGuids(fieldValue)) {
+          console.log('Value is a guid; get the item name');
+
+          let convertedValue = '';
+          let guids = getGuids(fieldValue);
+          for (var g = 0; g < guids.length; g++) {
+            let guid = guids[g];
+            if (g > 0) {
+              convertedValue += '; ';
+            }
+            if (guidFieldDictionary[guid]) {
+              convertedValue += guidFieldDictionary[guid];
+            } else {
+              const linkedItemResults = await MakePostRequest(
+                gqlEndpoint,
+                gqlApiKey,
+                guid,
+                '',
+                '',
+                result.language?.name ?? '',
+                authoringEndpoint,
+                !authoringEndpoint
+              );
+
+              let linkedItemResult = linkedItemResults;
+              if (authoringEndpoint) {
+                linkedItemResult = linkedItemResults[0]?.innerItem;
+              }
+
+              let itemName = linkedItemResult?.name;
+              guidFieldDictionary[fieldValue] = itemName;
+
+              convertedValue += itemName;
+            }
+          }
+          fieldValue = convertedValue;
+        }
 
         let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
         // double quote to escape commas
@@ -154,6 +193,81 @@ export const GenerateContentExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
+};
+
+export const getGuids = (value: string): string[] => {
+  if (value.indexOf('|') > -1) {
+    var parts = value.split('|');
+    return parts;
+  } else {
+    return [value];
+  }
+};
+
+export const validateMultiGuids = (value: string) => {
+  let guids = getGuids(value);
+
+  for (var i = 0; i < guids.length; i++) {
+    if (!validateGuid(guids[i])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const validateGuid = (value: string) => {
+  const regex = /^\{?[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}\}?$/i;
+
+  var values = value.split(',');
+  for (var i = 0; i < values.length; i++) {
+    var val = values[i].trim();
+
+    if (!val || val === '') continue;
+
+    if (!val.match(regex)) {
+      console.log(val + ' is not a valid guid');
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const MakePostRequest = async (
+  gqlEndpoint: string,
+  gqlApiKey: string,
+  startItem: string,
+  templates: string,
+  fields: string,
+  languages: string,
+  authoringEndpoint: boolean,
+  itemQuery: boolean
+): Promise<any> => {
+  const response = await fetch('/api/export', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      gqlEndpoint,
+      gqlApiKey,
+      startItem,
+      templates,
+      fields,
+      languages,
+      authoringEndpoint,
+      itemQuery,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const results = await response.json();
+
+  return results;
 };
 
 export const GetSearchQueryResults = async (gqlEndpoint: string, gqlApiKey: string, query: string): Promise<any> => {
@@ -402,10 +516,7 @@ export const PostMutationQuery = async (
   return errors;
 };
 
-export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
-  // show loading modal
-  const loadingModal = document.getElementById('loading-modal');
-
+export const GetTemplateSchema = async (instance: IInstance, startItem?: string): Promise<any> => {
   const gqlEndpoint = instance.graphQlEndpoint;
   let gqlApiKey = instance.apiToken;
   const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
@@ -414,8 +525,11 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
     return;
   }
 
-  if (loadingModal) {
-    loadingModal.style.display = 'block';
+  if (!startItem || startItem === '') {
+    alert(
+      'Enter a start item. If you really want every template in Sitecore, you can enter the ID of the Templates folder. This will take a long time.'
+    );
+    return;
   }
 
   console.log('Try refresh auth token:');
@@ -440,6 +554,18 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   console.log(results);
   const templates = results.templates;
+
+  return templates;
+};
+
+export const GenerateSchemaExport = async (instance: IInstance, startItem?: string) => {
+  const loadingModal = document.getElementById('loading-modal');
+
+  if (loadingModal) {
+    loadingModal.style.display = 'block';
+  }
+
+  const templates = await GetTemplateSchema(instance, startItem);
 
   // CSV:
   //const csvString = ResultsToCsv(templates);
@@ -511,6 +637,8 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   for (var i = 0; i < csvData.length; i++) {
     // header row
     if (i === 0) {
+      // TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
+
       let row = csvData[i];
       templateNameIndex = row.indexOf('Template');
       templateParentIndex = row.indexOf('Parent');

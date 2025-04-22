@@ -3,6 +3,7 @@ import {
   AuthoringPathFragment,
   AuthoringSearchQueryTemplate,
   AuthoringTemplatesFragment,
+  EdgeItemQueryTemplate,
   EdgeLangFragment,
   EdgeSearchQueryTemplate,
   SchemaQueryTemplate,
@@ -27,6 +28,11 @@ export const GetSearchQuery = (
   } else {
     return GetEdgeQuery(startItems, templates, fields, languages, cursor);
   }
+};
+
+export const GetEdgeItemQuery = (itemId: string, language: string): string => {
+  let query = EdgeItemQueryTemplate.replace('[ID]', itemId).replace('[LANG]', language);
+  return query;
 };
 
 // NOTE: Authoring Query only currently supports ONE path and template until I figure out how to do AND(OR)
@@ -76,6 +82,8 @@ export const GetAuthoringApiQuery = (
     .replace('fieldsFragment', fieldsFragment)
     .replace('langFragment', langFragment)
     .replace('afterFragment', cursor ? 'after: "' + cursor + '"' : '');
+
+  console.log(query);
 
   return query;
 };

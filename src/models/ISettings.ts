@@ -12,4 +12,5 @@ export interface ISettings {
   createdBy?: boolean;
   updatedDate?: boolean;
   updatedBy?: boolean;
+  convertGuids?: boolean;
 }

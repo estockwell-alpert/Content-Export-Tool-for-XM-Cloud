@@ -1,3 +1,4 @@
+import { GetBaseTemplateIds } from '@/services/sitecore/apiUtil';
 import { GetSchemaQuery } from '@/services/sitecore/createGqlQuery';
 import { NextResponse } from 'next/server';
 
@@ -16,7 +17,6 @@ export async function POST(request: Request) {
     const fieldSectionTemplateId = '{E269FBB5-3750-427A-9149-7AA950B49301}';
 
     const body = await request.json();
-    console.log(body);
     const { gqlEndpoint, gqlApiKey, startItem, templates, fields, authoringEndpoint } = body;
 
     // get all templates...
@@ -24,6 +24,8 @@ export async function POST(request: Request) {
     let templatesQuery = {
       query: allTemplatesQuery,
     };
+
+    console.log('Run first template query with startItem: ' + startItem);
 
     const allTemplatesResponse: any = await fetch(gqlEndpoint, {
       method: 'POST',
@@ -34,10 +36,7 @@ export async function POST(request: Request) {
       body: JSON.stringify(templatesQuery),
     });
 
-    console.log(JSON.stringify(templatesQuery));
-
     const jsonResults = await allTemplatesResponse.json();
-    console.log(JSON.stringify(jsonResults));
 
     const templateResults = jsonResults?.data?.search?.results;
 
@@ -47,7 +46,7 @@ export async function POST(request: Request) {
       const template = templateResults[i]?.innerItem;
       if (!template) continue;
 
-      console.log(i + ': ' + template.name + ' ' + template.itemId);
+      console.log('Template ' + i + ': ' + template.name + ' ' + template.itemId);
 
       let templateResult: ITemplateSchema = {
         templateName: template.name,
@@ -61,15 +60,22 @@ export async function POST(request: Request) {
       let templateIds = [];
       templateIds.push(template.itemId);
 
-      const baseTemplates = template.baseTemplate?.value
+      let baseTemplates = template.baseTemplate?.value
         ?.toLowerCase()
         .replaceAll('-', '')
         .replaceAll('{', '')
         .replaceAll('}', '')
         .split('|');
-      templateIds = templateIds.concat(baseTemplates);
 
-      console.log('All template IDs: ' + JSON.stringify(templateIds));
+      for (var b = 0; b < baseTemplates.length; b++) {
+        let baseTemplateIds = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, 0);
+        templateIds = templateIds.concat(baseTemplateIds);
+      }
+
+      console.log('BEGIN FIELDS QUERIES');
+
+      //return null;
+      // abort here for now
 
       for (var t = 0; t < templateIds.length; t++) {
         const templateId = templateIds[t];
