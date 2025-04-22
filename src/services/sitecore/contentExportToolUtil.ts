@@ -127,33 +127,42 @@ export const GenerateContentExport = async (
         let fieldValue = result[field]?.value ?? 'n/a';
 
         // check if field is guid/guids
-        if (convertGuids && fieldValue !== '' && validateGuid(fieldValue)) {
+        if (convertGuids && fieldValue !== '' && validateMultiGuids(fieldValue)) {
           console.log('Value is a guid; get the item name');
 
-          if (guidFieldDictionary[fieldValue]) {
-            fieldValue = guidFieldDictionary[fieldValue];
-          } else {
-            const linkedItemResults = await MakePostRequest(
-              gqlEndpoint,
-              gqlApiKey,
-              fieldValue,
-              '',
-              '',
-              result.language?.name ?? '',
-              authoringEndpoint,
-              !authoringEndpoint
-            );
-
-            let linkedItemResult = linkedItemResults;
-            if (authoringEndpoint) {
-              linkedItemResult = linkedItemResults[i]?.innerItem;
+          let convertedValue = '';
+          let guids = getGuids(fieldValue);
+          for (var g = 0; g < guids.length; g++) {
+            let guid = guids[g];
+            if (g > 0) {
+              convertedValue += '; ';
             }
+            if (guidFieldDictionary[guid]) {
+              convertedValue += guidFieldDictionary[guid];
+            } else {
+              const linkedItemResults = await MakePostRequest(
+                gqlEndpoint,
+                gqlApiKey,
+                guid,
+                '',
+                '',
+                result.language?.name ?? '',
+                authoringEndpoint,
+                !authoringEndpoint
+              );
 
-            let itemName = linkedItemResult?.name;
-            guidFieldDictionary[fieldValue] = itemName;
+              let linkedItemResult = linkedItemResults;
+              if (authoringEndpoint) {
+                linkedItemResult = linkedItemResults[0]?.innerItem;
+              }
 
-            fieldValue = itemName;
+              let itemName = linkedItemResult?.name;
+              guidFieldDictionary[fieldValue] = itemName;
+
+              convertedValue += itemName;
+            }
           }
+          fieldValue = convertedValue;
         }
 
         let cleanFieldValue = fieldValue.replace(/[\n\r\t]/gm, '').replace(/"/g, '""');
@@ -184,6 +193,27 @@ export const GenerateContentExport = async (
   if (loadingModal) {
     loadingModal.style.display = 'none';
   }
+};
+
+export const getGuids = (value: string): string[] => {
+  if (value.indexOf('|') > -1) {
+    var parts = value.split('|');
+    return parts;
+  } else {
+    return [value];
+  }
+};
+
+export const validateMultiGuids = (value: string) => {
+  let guids = getGuids(value);
+
+  for (var i = 0; i < guids.length; i++) {
+    if (!validateGuid(guids[i])) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 export const validateGuid = (value: string) => {
