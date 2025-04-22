@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         const fieldResults = await fieldsResponse.json();
 
         const fieldsJson = fieldResults?.data?.search?.results;
-        console.log(JSON.stringify(fieldsJson));
+        //console.log(JSON.stringify(fieldsJson));
 
         for (var f = 0; f < fieldsJson.length; f++) {
           const field = fieldsJson[f].innerItem;
@@ -129,6 +129,8 @@ export async function POST(request: Request) {
           }
 
           console.log('Current template: ' + templateId);
+          console.log('Field: ' + JSON.stringify(field));
+          console.log('Source: ' + field.source?.value);
 
           // update section
           let fieldObj: IField = {
@@ -138,6 +140,7 @@ export async function POST(request: Request) {
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
+            source: field.source?.value,
             required: required ? true : undefined,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
@@ -195,6 +198,7 @@ export interface IField {
   name: string;
   machineName: string;
   fieldType: string;
+  source: string;
   required?: boolean;
   defaultValue: string;
   helpText: string;

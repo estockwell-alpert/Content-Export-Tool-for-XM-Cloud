@@ -630,6 +630,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   let fieldNameIndex = -1;
   let machineNameIndex = -1;
   let fieldTypeIndex = -1;
+  let sourceIndex = -1;
   let defaultValueIndex = -1;
   let descriptionIndex = -1;
   let requiredIndex = -1;
@@ -649,6 +650,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         machineNameIndex = fieldNameIndex;
       }
       fieldTypeIndex = row.indexOf('Field Type');
+      sourceIndex = row.indexOf('Source');
       defaultValueIndex = row.indexOf('Default Value');
       descriptionIndex = row.indexOf('Help Text');
       requiredIndex = row.indexOf('Required');
@@ -703,6 +705,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           name: row[fieldNameIndex],
           machineName: row[machineNameIndex],
           fieldType: row[fieldTypeIndex],
+          source: row[sourceIndex],
           defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
           helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
           required: requiredIndex > -1 ? row[requiredIndex] : false,
@@ -847,7 +850,8 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   let csvData = [];
 
   // first row of CSV
-  let headerRow = 'Template,Path,Section,Name,Machine Name,Field Type,Required,Default Value,Help Text,Inherited From';
+  let headerRow =
+    'Template,Path,Section,Name,Machine Name,Field Type,Source,Required,Default Value,Help Text,Inherited From';
   csvData.push(headerRow);
 
   for (var i = 0; i < templates.length; i++) {
@@ -867,6 +871,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
         const name = field.name;
         const machineName = field.machineName;
         const fieldType = field.fieldType;
+        const source = field.source;
         const required = field.required ? 'TRUE' : '';
         const helpText = field.helpText;
         const defaultValue = field.defaultValue;
@@ -879,6 +884,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
         resultRow += name + ',';
         resultRow += CleanFieldValue(machineName) + ',';
         resultRow += fieldType + ',';
+        resultRow += source + ',';
         resultRow += required + ',';
         resultRow += CleanFieldValue(defaultValue) + ',';
         resultRow += CleanFieldValue(helpText) + ',';
@@ -936,6 +942,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
       name: '',
       machineName: '',
       fieldType: '',
+      source: '',
       defaultValue: '',
       helpText: '',
       inheritedFrom: '',
@@ -969,6 +976,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
       'Field Name',
       'Machine Name',
       'Field Type',
+      'Source',
       'Default Value',
       'Help Text',
       'Inherited From',
