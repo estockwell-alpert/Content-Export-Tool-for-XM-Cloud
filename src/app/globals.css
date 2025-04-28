@@ -208,3 +208,9 @@ textarea.error:focus {
 button {
   cursor: pointer;
 }
+
+.link {
+  color: #0091e6;
+  font-weight: bold;
+  cursor: pointer;
+}

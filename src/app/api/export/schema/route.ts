@@ -192,7 +192,7 @@ export interface IField {
   fieldType: string;
   source: string;
   required?: boolean;
-  defaultValue: string;
-  helpText: string;
+  defaultValue?: string;
+  helpText?: string;
   inheritedFrom?: string;
 }

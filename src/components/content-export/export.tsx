@@ -11,6 +11,7 @@ import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
@@ -510,44 +511,80 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     </div>
 
                     {/* to do: make collapsible, fix to work fully with Edge */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-4">
                       <label className="text-sm font-medium">Standard Fields</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
+                        id={`checkbox-template`}
                         checked={includeTemplate}
-                        onChange={() => setIncludeTemplate(!includeTemplate)}
+                        onCheckedChange={(checked: boolean) => setIncludeTemplate(checked === true)}
+                        className="mr-2"
                       />
-                      <label>Template</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={includeLang} onChange={() => setIncludeLang(!includeLang)} />
-                      <label>Language</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={createdDate} onChange={() => setCreatedDate(!createdDate)} />
-                      <label>Created Date</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={createdBy} onChange={() => setCreatedBy(!createdBy)} />
-                      <label>Created By</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={updatedDate} onChange={() => setUpdatedDate(!updatedDate)} />
-                      <label>Updated Date</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={updatedBy} onChange={() => setUpdatedBy(!updatedBy)} />
-                      <label>Updated By</label>
+                      <span className="flex-grow">Template</span>
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkbox-lang`}
+                        checked={includeLang}
+                        onCheckedChange={(checked: boolean) => setIncludeLang(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Language</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkbox-created`}
+                        checked={createdDate}
+                        onCheckedChange={(checked: boolean) => setCreatedDate(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Created Date</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkbox-createdBy`}
+                        checked={createdBy}
+                        onCheckedChange={(checked: boolean) => setCreatedBy(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Created By</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkbox-updatedDate`}
+                        checked={updatedDate}
+                        onCheckedChange={(checked: boolean) => setUpdatedDate(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Updated Date</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`checkbox-updatedBy`}
+                        checked={updatedBy}
+                        onCheckedChange={(checked: boolean) => setUpdatedBy(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Updated By</span>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
                       <label className="text-sm font-medium">Options</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" checked={convertGuids} onChange={() => setConvertGuids(!convertGuids)} />
-                      <label>Export Linked Item Names</label>
+                      <Checkbox
+                        id={`checkbox-convertGuids`}
+                        checked={convertGuids}
+                        onCheckedChange={(checked: boolean) => setConvertGuids(checked === true)}
+                        className="mr-2"
+                      />
+                      <span className="flex-grow">Export Linked Item Names</span>
                     </div>
                     <Alert variant="default" className="mt-2">
                       <AlertDescription className="text-xs">

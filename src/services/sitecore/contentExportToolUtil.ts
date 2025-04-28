@@ -762,8 +762,8 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         fieldFragments += TemplateFieldFragment.replace('[FIELDNAME]', field.machineName ?? field.name)
           .replace('[FIELDTYPE]', field.fieldType)
           .replace('[TITLE]', field.name)
-          .replace('[DEFAULT]', field.defaultValue)
-          .replace('[DESCRIPTION]', field.helpText);
+          .replace('[DEFAULT]', field.defaultValue ?? '')
+          .replace('[DESCRIPTION]', field.helpText ?? '');
       }
 
       sectionsFragments += sectionFragment.replace('[FIELDFRAGMENTS]', fieldFragments);
@@ -888,8 +888,8 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
         const fieldType = field.fieldType;
         const source = field.source;
         const required = field.required ? 'TRUE' : '';
-        const helpText = field.helpText;
-        const defaultValue = field.defaultValue;
+        const helpText = field.helpText ?? '';
+        const defaultValue = field.defaultValue ?? '';
         const inheritedFrom = field.inheritedFrom;
 
         let resultRow = '';
@@ -924,7 +924,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   element.click();
 };
 
-export const ResultsToXslx = (templates: ITemplateSchema[]) => {
+export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) => {
   // Create Excel workbook and worksheet
   const workbook = XLSX.utils.book_new();
   //const worksheet = XLSX.utils?.json_to_sheet(templates);
@@ -995,20 +995,15 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
   }
 
   const header = [
-    [
-      'Template',
-      'Path',
-      'Section',
-      'Field Name',
-      'Machine Name',
-      'Field Type',
+    ['Template', 'Path', 'Section', 'Field Name', 'Machine Name', 'Field Type', 'Default Value', 'Help Text'],
       'Source',
-      'Default Value',
-      'Help Text',
-      'Inherited From',
-      'Required',
-    ],
   ];
+
+  if (!fileName || fileName?.indexOf('Import') === -1) {
+    header[0] = header[0].concat(['Inherited From', 'Required']);
+  } else {
+    header[0] = header[0].concat([' ', ' ']);
+  }
 
   if (worksheets.length === 0) {
     alert('No results found');
@@ -1023,7 +1018,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[]) => {
   }
 
   // Save the workbook as an Excel file
-  XLSX.writeFile(workbook, `${'Templates Schema'}.xlsx`);
+  XLSX.writeFile(workbook, `${fileName ?? 'Templates Schema'}.xlsx`);
   console.log(`Exported data to xslx`);
 };
 

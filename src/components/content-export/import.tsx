@@ -1,5 +1,6 @@
+import { ITemplateSchema } from '@/app/api/export/schema/route';
 import { IInstance } from '@/models/IInstance';
-import { PostCreateTemplateQuery, PostMutationQuery } from '@/services/sitecore/contentExportToolUtil';
+import { PostCreateTemplateQuery, PostMutationQuery, ResultsToXslx } from '@/services/sitecore/contentExportToolUtil';
 import Papa from 'papaparse';
 import { FC, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
@@ -87,6 +88,65 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
     } catch (error) {
       console.error('Error parsing file:', error);
     }
+  };
+
+  const downloadExample = async () => {
+    let templates: ITemplateSchema[] = [];
+
+    templates.push({
+      templateName: 'Promo',
+      templatePath: '{A5D09E5B-67D8-48FD-A468-65670B9498A2}',
+      folder: 'Templates',
+      sections: [
+        {
+          name: 'Content',
+          fields: [
+            { template: '', path: '', section: 'Content', name: 'Image', machineName: 'image', fieldType: 'Image' },
+            {
+              template: '',
+              path: '',
+              section: 'Content',
+              name: 'Heading',
+              machineName: 'heading',
+              fieldType: 'Single-Line Text',
+              defaultValue: '$name',
+            },
+            {
+              template: '',
+              path: '',
+              section: 'Content',
+              name: 'Link 1',
+              machineName: 'link1',
+              fieldType: 'General Link',
+            },
+          ],
+        },
+        {
+          name: 'Search',
+          fields: [
+            {
+              template: '',
+              path: '',
+              section: 'Search',
+              name: 'Content Type',
+              machineName: 'contentType',
+              fieldType: 'Droplist',
+            },
+            {
+              template: '',
+              path: '',
+              section: 'Search',
+              name: 'Taxonomies',
+              machineName: 'taxonomies',
+              fieldType: 'Multiroot Treelist',
+              helpText: 'not displayed, only used for search',
+            },
+          ],
+        },
+      ],
+    });
+
+    ResultsToXslx(templates, 'Example Schema Import');
   };
 
   const handleRunSchemaImport = async () => {
@@ -263,9 +323,16 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
                         <li>Review all modified items before publishing</li>
                         <li>Only CSV format is supported</li>
                         <li>Item Path must be string for Update, GUID for Create</li>
-                        <li>Supports string, image, and link fields</li>
+                        <li>
+                          Supports all field types, formatted as <b>raw values</b>
+                        </li>
                         <li>Add Language column for specific versions</li>
                       </ul>
+                      <h3 className="font-medium">Tips</h3>
+                      <p>
+                        The best way to make sure your file is formatted correctly is to export your content first, edit
+                        in Excel, and then import the same file; it will already be formatted correctly.
+                      </p>
                     </div>
                   </div>
                 </AlertDescription>
@@ -355,8 +422,12 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
                     <div className="space-y-2">
                       <h3 className="font-medium">Important Notes</h3>
                       <ul className="list-disc pl-4 space-y-1 text-sm">
-                        <li>Only XSLX format is supported</li>
+                        <li>XLSX and CSV supported</li>
                       </ul>
+
+                      <a className="link" onClick={downloadExample}>
+                        Download Example
+                      </a>
                     </div>
                   </div>
                 </AlertDescription>
