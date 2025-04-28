@@ -995,8 +995,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) =
   }
 
   const header = [
-    ['Template', 'Path', 'Section', 'Field Name', 'Machine Name', 'Field Type', 'Default Value', 'Help Text'],
-      'Source',
+    ['Template', 'Path', 'Section', 'Field Name', 'Machine Name', 'Field Type', 'Source', 'Default Value', 'Help Text'],
   ];
 
   if (!fileName || fileName?.indexOf('Import') === -1) {
