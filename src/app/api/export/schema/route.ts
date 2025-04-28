@@ -53,24 +53,21 @@ export async function POST(request: Request) {
         templatePath: template.path,
         folder: template.parent?.name,
         sections: [],
+        renderingParams: false,
       };
+
+      if (templateResult.folder === 'Rendering Parameters') {
+        templateResult.renderingParams = true;
+        templateResult.folder = template.parent?.parent?.name;
+      }
 
       let sections: ITemplateSection[] = [];
 
       let templateIds = [];
       templateIds.push(template.itemId);
 
-      let baseTemplates = template.baseTemplate?.value
-        ?.toLowerCase()
-        .replaceAll('-', '')
-        .replaceAll('{', '')
-        .replaceAll('}', '')
-        .split('|');
-
-      for (var b = 0; b < baseTemplates.length; b++) {
-        let baseTemplateIds = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, 0);
-        templateIds = templateIds.concat(baseTemplateIds);
-      }
+      let baseTemplateIds = await GetBaseTemplateIds(template.itemId, gqlEndpoint, gqlApiKey, 0);
+      templateIds = templateIds.concat(baseTemplateIds);
 
       console.log('BEGIN FIELDS QUERIES');
 
@@ -101,7 +98,7 @@ export async function POST(request: Request) {
         const fieldResults = await fieldsResponse.json();
 
         const fieldsJson = fieldResults?.data?.search?.results;
-        console.log(JSON.stringify(fieldsJson));
+        //console.log(JSON.stringify(fieldsJson));
 
         for (var f = 0; f < fieldsJson.length; f++) {
           const field = fieldsJson[f].innerItem;
@@ -128,16 +125,15 @@ export async function POST(request: Request) {
             required = true;
           }
 
-          console.log('Current template: ' + templateId);
-
           // update section
           let fieldObj: IField = {
             template: '',
             path: '',
-            section: sectionName,
+            section: '',
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
+            source: field.source?.value,
             required: required ? true : undefined,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
@@ -162,8 +158,6 @@ export async function POST(request: Request) {
       results.push(templateResult);
     }
 
-    console.log(JSON.stringify(results));
-
     return NextResponse.json({ templates: results });
   } catch (error) {
     console.error('Error posting query:', error);
@@ -179,6 +173,7 @@ export interface IWorksheetSchema {
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
+  renderingParams?: boolean;
   folder: string;
   sections: ITemplateSection[];
 }
@@ -195,6 +190,7 @@ export interface IField {
   name: string;
   machineName: string;
   fieldType: string;
+  source: string;
   required?: boolean;
   defaultValue?: string;
   helpText?: string;

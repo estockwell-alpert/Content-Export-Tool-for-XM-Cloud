@@ -565,7 +565,9 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
     loadingModal.style.display = 'block';
   }
 
-  const templates = await GetTemplateSchema(instance, startItem);
+  let templates = await GetTemplateSchema(instance, startItem);
+
+  templates = templates?.sort(compare);
 
   // CSV:
   //const csvString = ResultsToCsv(templates);
@@ -578,6 +580,16 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   alert('Done - check your downloads!');
 };
+
+function compare(a: any, b: any) {
+  if (a.templateName < b.templateName) {
+    return -1;
+  } else if (a.templateName > b.templateName) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
 export const PostCreateTemplateQuery = async (instance: IInstance, file: File, csvData?: any[]): Promise<string[]> => {
   errorHasBeenDisplayed = false;
@@ -623,6 +635,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
 
   let templateSchemas: ITemplateSchema[] = [];
   let currentSchema: ITemplateSchema | null = null;
+  let sectionName = '';
   let query = '';
   let templateNameIndex = -1;
   let templateParentIndex = -1;
@@ -630,6 +643,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   let fieldNameIndex = -1;
   let machineNameIndex = -1;
   let fieldTypeIndex = -1;
+  let sourceIndex = -1;
   let defaultValueIndex = -1;
   let descriptionIndex = -1;
   let requiredIndex = -1;
@@ -637,7 +651,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   for (var i = 0; i < csvData.length; i++) {
     // header row
     if (i === 0) {
-      // TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
+      // TODO: TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
 
       let row = csvData[i];
       templateNameIndex = row.indexOf('Template');
@@ -649,11 +663,15 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         machineNameIndex = fieldNameIndex;
       }
       fieldTypeIndex = row.indexOf('Field Type');
+      sourceIndex = row.indexOf('Source');
       defaultValueIndex = row.indexOf('Default Value');
       descriptionIndex = row.indexOf('Help Text');
       requiredIndex = row.indexOf('Required');
 
       if (templateNameIndex === -1 || templateParentIndex === -1 || fieldNameIndex === -1 || fieldTypeIndex === -1) {
+        if (loadingModal) {
+          loadingModal.style.display = 'none';
+        }
         return ['Missing required fields'];
       }
 
@@ -675,6 +693,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         templatePath: '',
         folder: '',
         sections: [],
+        renderingParams: false,
       };
 
       // if row is not blank:
@@ -682,9 +701,18 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         currentSchema.templateName = row[templateNameIndex];
         currentSchema.templatePath = row[templateParentIndex];
       }
-    } else if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
-      // get section
-      var sectionName = sectionNameIndex > -1 ? row[sectionNameIndex] : 'Data';
+    }
+    // check for section
+    if (currentSchema && row[sectionNameIndex] && row[sectionNameIndex] !== '') {
+      sectionName = row[sectionNameIndex];
+    }
+    // process field
+    if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
+      if (sectionName === '') {
+        // default section if no section is specified
+        console.log('SECTION NAME MISSING, DEFAULTING TO "DATA"');
+        sectionName = 'Data';
+      }
       const sectionIndex = currentSchema.sections.findIndex((x) => x.name === sectionName);
       let section: ITemplateSection;
       if (sectionIndex === -1) {
@@ -703,6 +731,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           name: row[fieldNameIndex],
           machineName: row[machineNameIndex],
           fieldType: row[fieldTypeIndex],
+          source: row[sourceIndex],
           defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
           helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
           required: requiredIndex > -1 ? row[requiredIndex] : false,
@@ -847,7 +876,8 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   let csvData = [];
 
   // first row of CSV
-  let headerRow = 'Template,Path,Section,Name,Machine Name,Field Type,Required,Default Value,Help Text,Inherited From';
+  let headerRow =
+    'Template,Path,Section,Name,Machine Name,Field Type,Source,Required,Default Value,Help Text,Inherited From';
   csvData.push(headerRow);
 
   for (var i = 0; i < templates.length; i++) {
@@ -862,11 +892,14 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
       const sectionName = section.name;
 
+      csvData.push(',,' + sectionName);
+
       for (var k = 0; k < section.fields.length; k++) {
         const field = section.fields[k];
         const name = field.name;
         const machineName = field.machineName;
         const fieldType = field.fieldType;
+        const source = field.source;
         const required = field.required ? 'TRUE' : '';
         const helpText = field.helpText ?? '';
         const defaultValue = field.defaultValue ?? '';
@@ -874,11 +907,11 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
         let resultRow = '';
 
-        resultRow += ',,';
-        resultRow += CleanFieldValue(sectionName) + ',';
+        resultRow += ',,,';
         resultRow += name + ',';
         resultRow += CleanFieldValue(machineName) + ',';
         resultRow += fieldType + ',';
+        resultRow += source + ',';
         resultRow += required + ',';
         resultRow += CleanFieldValue(defaultValue) + ',';
         resultRow += CleanFieldValue(helpText) + ',';
@@ -904,7 +937,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   element.click();
 };
 
-export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) => {
+export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, headers?: string[]) => {
   // Create Excel workbook and worksheet
   const workbook = XLSX.utils.book_new();
   //const worksheet = XLSX.utils?.json_to_sheet(templates);
@@ -930,12 +963,13 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) =
     }
 
     const templateRow: IField = {
-      template: template.templateName,
+      template: template.templateName + (template.renderingParams ? ' (Rendering Parameters)' : ''),
       path: template.templatePath,
       section: '',
       name: '',
       machineName: '',
       fieldType: '',
+      source: '',
       defaultValue: '',
       helpText: '',
       inheritedFrom: '',
@@ -944,6 +978,18 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) =
     worksheet.data.push(templateRow);
 
     for (var j = 0; j < template.sections.length; j++) {
+      worksheet.data.push({
+        template: '',
+        path: '',
+        section: template.sections[j].name,
+        name: '',
+        machineName: '',
+        fieldType: '',
+        source: '',
+        defaultValue: '',
+        helpText: '',
+        inheritedFrom: '',
+      });
       const dataLines = template.sections[j].fields;
       worksheet.data = worksheet.data.concat(dataLines);
     }
@@ -961,15 +1007,23 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) =
     }
   }
 
-  const header = [
-    ['Template', 'Path', 'Section', 'Field Name', 'Machine Name', 'Field Type', 'Default Value', 'Help Text'],
-  ];
-
-  if (!fileName || fileName?.indexOf('Import') === -1) {
-    header[0] = header[0].concat(['Inherited From', 'Required']);
-  } else {
-    header[0] = header[0].concat([' ', ' ']);
-  }
+  const header = headers
+    ? [headers]
+    : [
+        [
+          'Template',
+          'Path',
+          'Section',
+          'Field Name',
+          'Machine Name',
+          'Field Type',
+          'Source',
+          'Default Value',
+          'Help Text',
+          'Inherited From',
+          'Required',
+        ],
+      ];
 
   if (worksheets.length === 0) {
     alert('No results found');

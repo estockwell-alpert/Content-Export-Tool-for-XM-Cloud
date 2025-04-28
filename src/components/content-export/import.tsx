@@ -26,16 +26,18 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const [schemaImportMessages, setSchemaImportMessages] = useState<string[]>([]);
   const [contentImport, setContentImport] = useState<boolean>(true);
 
-  const clearFileInput = () => {
-    //const inpt = document.getElementById("inptFile");
-    //inpt.value
-    setSchemaFileKey(Math.random().toString(36));
-  };
-
   const clearSchemaFileInput = () => {
     //const inpt = document.getElementById("inptFile");
     //inpt.value
+    setSchemaFileKey(Math.random().toString(36));
+    setSelectedSchemaFile(undefined);
+  };
+
+  const clearFileInput = () => {
+    //const inpt = document.getElementById("inptFile");
+    //inpt.value
     setFileKey(Math.random().toString(36));
+    setSelectedFile(undefined);
   };
 
   const onFileChange = (event: any) => {
@@ -95,29 +97,39 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
 
     templates.push({
       templateName: 'Promo',
-      templatePath: '{A5D09E5B-67D8-48FD-A468-65670B9498A2}',
+      templatePath: '{7479293E-4A3A-47C8-9370-2D32EF37E07C}',
       folder: 'Templates',
       sections: [
         {
           name: 'Content',
           fields: [
-            { template: '', path: '', section: 'Content', name: 'Image', machineName: 'image', fieldType: 'Image' },
             {
               template: '',
               path: '',
-              section: 'Content',
+              section: '',
+              name: 'Image',
+              machineName: 'image',
+              fieldType: 'Image',
+              source: '',
+            },
+            {
+              template: '',
+              path: '',
+              section: '',
               name: 'Heading',
               machineName: 'heading',
               fieldType: 'Single-Line Text',
+              source: '',
               defaultValue: '$name',
             },
             {
               template: '',
               path: '',
-              section: 'Content',
+              section: '',
               name: 'Link 1',
               machineName: 'link1',
               fieldType: 'General Link',
+              source: '',
             },
           ],
         },
@@ -127,18 +139,20 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
             {
               template: '',
               path: '',
-              section: 'Search',
+              section: '',
               name: 'Content Type',
               machineName: 'contentType',
               fieldType: 'Droplist',
+              source: 'query:$site/Search/Enumerations/Content Type/*',
             },
             {
               template: '',
               path: '',
-              section: 'Search',
+              section: '',
               name: 'Taxonomies',
               machineName: 'taxonomies',
               fieldType: 'Multiroot Treelist',
+              source: '{5344462B-31B3-443B-8FD5-8A7A881A66A3}',
               helpText: 'not displayed, only used for search',
             },
           ],
@@ -146,7 +160,21 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       ],
     });
 
-    ResultsToXslx(templates, 'Example Schema Import');
+    const headers = [
+      'Template',
+      'Parent',
+      'Section',
+      'Field Name',
+      'Machine Name',
+      'Field Type',
+      'Source',
+      'Default Value',
+      'Help Text',
+      ' ',
+      ' ',
+    ];
+
+    ResultsToXslx(templates, 'Example Schema Import', headers);
   };
 
   const handleRunSchemaImport = async () => {
@@ -236,15 +264,18 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
               </p>
 
               <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Input
-                  key={fileKey}
-                  id="inptFile"
-                  type="file"
-                  accept=".csv"
-                  onChange={onFileChange}
-                  className="cursor-pointer"
-                />
-                <a onClick={clearFileInput}>Clear</a>
+                <div className="flex justify-between gap-4">
+                  <Input
+                    key={fileKey}
+                    id="inptFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={onFileChange}
+                    className="cursor-pointer"
+                  />
+                  <a onClick={clearFileInput}>Clear</a>
+                </div>
+
                 <Button onClick={handleRunImport} disabled={!selectedFile}>
                   Import
                 </Button>
@@ -356,15 +387,17 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
               </p>
 
               <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Input
-                  key={schemaFileKey}
-                  id="inptSchemaFile"
-                  type="file"
-                  accept=".csv, .xlsx"
-                  onChange={onSchemaFileChange}
-                  className="cursor-pointer"
-                />
-                <a onClick={clearSchemaFileInput}>Clear</a>
+                <div className="flex justify-between gap-4">
+                  <Input
+                    key={schemaFileKey}
+                    id="inptSchemaFile"
+                    type="file"
+                    accept=".csv, .xlsx"
+                    onChange={onSchemaFileChange}
+                    className="cursor-pointer"
+                  />
+                  <a onClick={clearSchemaFileInput}>Clear</a>
+                </div>
                 <Button onClick={handleRunSchemaImport} disabled={!selectedSchemaFile}>
                   Import Schema
                 </Button>

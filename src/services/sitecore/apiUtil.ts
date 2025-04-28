@@ -48,15 +48,21 @@ export const GetBaseTemplateIds = async (
     const template = templateResults[i]?.innerItem;
     if (!template) continue;
 
+    console.log('Current template is ' + template.name + ' - ' + template.itemId);
     // abort if we're in the system templates
-    if (template.path.startsWith('/sitecore/templates/System/') || template.name === 'Standard template') {
-      console.log('Skipping ' + template.Name + ' ' + template.path);
+    if (
+      template.path.startsWith('/sitecore/templates/System/') ||
+      template.name === 'Standard template' ||
+      template.name === 'Standard Rendering Parameters' ||
+      template.name === 'IDynamicPlaceholder'
+    ) {
+      console.log('Skipping ' + template.name + ' ' + template.path);
       continue;
     }
 
-    console.log('CURRENT TEMPLATE: ' + template.name + ' - ' + template.path);
-
     results.push(template.itemId);
+
+    console.log('Added ' + template.name + ' to list');
 
     let baseTemplates = template.baseTemplate?.value
       ?.toLowerCase()
@@ -70,7 +76,6 @@ export const GetBaseTemplateIds = async (
       console.log(
         baseTemplates.length + ' base templates found on ' + template.name + ': ' + template.baseTemplate.value
       );
-      results = results.concat(baseTemplates);
 
       for (var b = 0; b < baseTemplates.length; b++) {
         if (existingTemplateIds && existingTemplateIds.indexOf(baseTemplates[b])) {
@@ -80,6 +85,9 @@ export const GetBaseTemplateIds = async (
         console.log('Get base templates for ' + baseTemplates[b] + '...');
 
         const baseresults = await GetBaseTemplateIds(baseTemplates[b], gqlEndpoint, gqlApiKey, depth++, results);
+
+        console.log('Base Results: ' + JSON.stringify(baseresults));
+
         results = results.concat(baseresults);
       }
     } else {
@@ -88,5 +96,6 @@ export const GetBaseTemplateIds = async (
   }
 
   console.log('Finished for ' + startItem);
+  console.log('Results: ' + JSON.stringify(results));
   return results;
 };
