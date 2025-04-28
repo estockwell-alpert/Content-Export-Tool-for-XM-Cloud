@@ -173,7 +173,7 @@ export interface IWorksheetSchema {
 export interface ITemplateSchema {
   templateName: string;
   templatePath: string;
-  renderingParams: boolean;
+  renderingParams?: boolean;
   folder: string;
   sections: ITemplateSection[];
 }
