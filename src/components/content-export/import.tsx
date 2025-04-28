@@ -95,7 +95,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
 
     templates.push({
       templateName: 'Promo',
-      templatePath: '{A5D09E5B-67D8-48FD-A468-65670B9498A2}',
+      templatePath: '{7479293E-4A3A-47C8-9370-2D32EF37E07C}',
       folder: 'Templates',
       sections: [
         {
@@ -104,7 +104,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
             {
               template: '',
               path: '',
-              section: 'Content',
+              section: '',
               name: 'Image',
               machineName: 'image',
               fieldType: 'Image',
@@ -158,7 +158,21 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       ],
     });
 
-    ResultsToXslx(templates, 'Example Schema Import');
+    const headers = [
+      'Template',
+      'Parent',
+      'Section',
+      'Field Name',
+      'Machine Name',
+      'Field Type',
+      'Source',
+      'Default Value',
+      'Help Text',
+      ' ',
+      ' ',
+    ];
+
+    ResultsToXslx(templates, 'Example Schema Import', headers);
   };
 
   const handleRunSchemaImport = async () => {

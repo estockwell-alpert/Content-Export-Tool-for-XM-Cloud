@@ -635,6 +635,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
 
   let templateSchemas: ITemplateSchema[] = [];
   let currentSchema: ITemplateSchema | null = null;
+  let sectionName = '';
   let query = '';
   let templateNameIndex = -1;
   let templateParentIndex = -1;
@@ -650,7 +651,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   for (var i = 0; i < csvData.length; i++) {
     // header row
     if (i === 0) {
-      // TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
+      // TODO: TEST TO SEE IF MISSING OPTIONAL COLUMN CAUSES ERROR
 
       let row = csvData[i];
       templateNameIndex = row.indexOf('Template');
@@ -668,6 +669,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       requiredIndex = row.indexOf('Required');
 
       if (templateNameIndex === -1 || templateParentIndex === -1 || fieldNameIndex === -1 || fieldTypeIndex === -1) {
+        if (loadingModal) {
+          loadingModal.style.display = 'none';
+        }
         return ['Missing required fields'];
       }
 
@@ -697,9 +701,18 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         currentSchema.templateName = row[templateNameIndex];
         currentSchema.templatePath = row[templateParentIndex];
       }
-    } else if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
-      // get section
-      var sectionName = sectionNameIndex > -1 ? row[sectionNameIndex] : 'Data';
+    }
+    // check for section
+    if (currentSchema && row[sectionNameIndex] && row[sectionNameIndex] !== '') {
+      sectionName = row[sectionNameIndex];
+    }
+    // process field
+    if (row[fieldNameIndex] && row[fieldNameIndex] !== '' && currentSchema) {
+      if (sectionName === '') {
+        // default section if no section is specified
+        console.log('SECTION NAME MISSING, DEFAULTING TO "DATA"');
+        sectionName = 'Data';
+      }
       const sectionIndex = currentSchema.sections.findIndex((x) => x.name === sectionName);
       let section: ITemplateSection;
       if (sectionIndex === -1) {
@@ -924,7 +937,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
   element.click();
 };
 
-export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) => {
+export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, headers?: string[]) => {
   // Create Excel workbook and worksheet
   const workbook = XLSX.utils.book_new();
   //const worksheet = XLSX.utils?.json_to_sheet(templates);
@@ -994,15 +1007,23 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string) =
     }
   }
 
-  const header = [
-    ['Template', 'Path', 'Section', 'Field Name', 'Machine Name', 'Field Type', 'Source', 'Default Value', 'Help Text'],
-  ];
-
-  if (!fileName || fileName?.indexOf('Import') === -1) {
-    header[0] = header[0].concat(['Inherited From', 'Required']);
-  } else {
-    header[0] = header[0].concat([' ', ' ']);
-  }
+  const header = headers
+    ? [headers]
+    : [
+        [
+          'Template',
+          'Path',
+          'Section',
+          'Field Name',
+          'Machine Name',
+          'Field Type',
+          'Source',
+          'Default Value',
+          'Help Text',
+          'Inherited From',
+          'Required',
+        ],
+      ];
 
   if (worksheets.length === 0) {
     alert('No results found');
