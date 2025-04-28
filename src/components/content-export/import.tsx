@@ -26,13 +26,13 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
   const [schemaImportMessages, setSchemaImportMessages] = useState<string[]>([]);
   const [contentImport, setContentImport] = useState<boolean>(true);
 
-  const clearFileInput = () => {
+  const clearSchemaFileInput = () => {
     //const inpt = document.getElementById("inptFile");
     //inpt.value
     setSchemaFileKey(Math.random().toString(36));
   };
 
-  const clearSchemaFileInput = () => {
+  const clearFileInput = () => {
     //const inpt = document.getElementById("inptFile");
     //inpt.value
     setFileKey(Math.random().toString(36));
