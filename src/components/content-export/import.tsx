@@ -30,12 +30,14 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
     //const inpt = document.getElementById("inptFile");
     //inpt.value
     setSchemaFileKey(Math.random().toString(36));
+    setSelectedSchemaFile(undefined);
   };
 
   const clearFileInput = () => {
     //const inpt = document.getElementById("inptFile");
     //inpt.value
     setFileKey(Math.random().toString(36));
+    setSelectedFile(undefined);
   };
 
   const onFileChange = (event: any) => {
@@ -262,15 +264,18 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
               </p>
 
               <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Input
-                  key={fileKey}
-                  id="inptFile"
-                  type="file"
-                  accept=".csv"
-                  onChange={onFileChange}
-                  className="cursor-pointer"
-                />
-                <a onClick={clearFileInput}>Clear</a>
+                <div className="flex justify-between gap-4">
+                  <Input
+                    key={fileKey}
+                    id="inptFile"
+                    type="file"
+                    accept=".csv"
+                    onChange={onFileChange}
+                    className="cursor-pointer"
+                  />
+                  <a onClick={clearFileInput}>Clear</a>
+                </div>
+
                 <Button onClick={handleRunImport} disabled={!selectedFile}>
                   Import
                 </Button>
@@ -382,15 +387,17 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
               </p>
 
               <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Input
-                  key={schemaFileKey}
-                  id="inptSchemaFile"
-                  type="file"
-                  accept=".csv, .xlsx"
-                  onChange={onSchemaFileChange}
-                  className="cursor-pointer"
-                />
-                <a onClick={clearSchemaFileInput}>Clear</a>
+                <div className="flex justify-between gap-4">
+                  <Input
+                    key={schemaFileKey}
+                    id="inptSchemaFile"
+                    type="file"
+                    accept=".csv, .xlsx"
+                    onChange={onSchemaFileChange}
+                    className="cursor-pointer"
+                  />
+                  <a onClick={clearSchemaFileInput}>Clear</a>
+                </div>
                 <Button onClick={handleRunSchemaImport} disabled={!selectedSchemaFile}>
                   Import Schema
                 </Button>
