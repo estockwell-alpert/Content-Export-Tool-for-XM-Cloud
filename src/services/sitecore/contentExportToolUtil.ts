@@ -587,6 +587,12 @@ function compare(a: any, b: any) {
   } else if (a.templateName > b.templateName) {
     return 1;
   } else {
+    if (a.renderingParams && !b.renderingParams) {
+      return 1;
+    }
+    if (b.renderingParams && !a.renderingParams) {
+      return -1;
+    }
     return 0;
   }
 }
