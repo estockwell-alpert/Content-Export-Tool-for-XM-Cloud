@@ -738,9 +738,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           machineName: row[machineNameIndex],
           fieldType: row[fieldTypeIndex],
           source: row[sourceIndex],
+          required: requiredIndex > -1 ? row[requiredIndex] : false,
           defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
           helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
-          required: requiredIndex > -1 ? row[requiredIndex] : false,
           inheritedFrom: '',
           template: '',
           path: '',
@@ -883,7 +883,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
   // first row of CSV
   let headerRow =
-    'Template,Path,Section,Name,Machine Name,Field Type,Source,Required,Default Value,Help Text,Inherited From';
+    'Template,Path,Section,Name,Machine Name,Field Type,Required,Source,Default Value,Help Text,Inherited From';
   csvData.push(headerRow);
 
   for (var i = 0; i < templates.length; i++) {
@@ -917,8 +917,8 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
         resultRow += name + ',';
         resultRow += CleanFieldValue(machineName) + ',';
         resultRow += fieldType + ',';
-        resultRow += source + ',';
         resultRow += required + ',';
+        resultRow += source + ',';
         resultRow += CleanFieldValue(defaultValue) + ',';
         resultRow += CleanFieldValue(helpText) + ',';
         resultRow += inheritedFrom;
@@ -975,6 +975,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
       name: '',
       machineName: '',
       fieldType: '',
+      required: undefined,
       source: '',
       defaultValue: '',
       helpText: '',
@@ -991,6 +992,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
         name: '',
         machineName: '',
         fieldType: '',
+        required: undefined,
         source: '',
         defaultValue: '',
         helpText: '',
@@ -1023,11 +1025,11 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
           'Field Name',
           'Machine Name',
           'Field Type',
+          'Required',
           'Source',
           'Default Value',
           'Help Text',
           'Inherited From',
-          'Required',
         ],
       ];
 

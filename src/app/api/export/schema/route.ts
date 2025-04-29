@@ -133,8 +133,8 @@ export async function POST(request: Request) {
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
-            source: field.source?.value,
             required: required ? true : undefined,
+            source: field.source?.value,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== template.itemId ? field.parent?.parent?.name : '',
@@ -190,8 +190,8 @@ export interface IField {
   name: string;
   machineName: string;
   fieldType: string;
-  source: string;
   required?: boolean;
+  source: string;
   defaultValue?: string;
   helpText?: string;
   inheritedFrom?: string;

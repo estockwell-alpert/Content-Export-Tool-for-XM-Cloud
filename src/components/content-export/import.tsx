@@ -167,10 +167,10 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
       'Field Name',
       'Machine Name',
       'Field Type',
+      'Required',
       'Source',
       'Default Value',
       'Help Text',
-      ' ',
       ' ',
     ];
 
