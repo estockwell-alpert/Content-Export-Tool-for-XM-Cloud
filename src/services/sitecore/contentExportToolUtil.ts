@@ -645,6 +645,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   let query = '';
   let templateNameIndex = -1;
   let templateParentIndex = -1;
+  let baseTemplatesIndex = -1;
   let sectionNameIndex = -1;
   let fieldNameIndex = -1;
   let machineNameIndex = -1;
@@ -662,6 +663,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       let row = csvData[i];
       templateNameIndex = row.indexOf('Template');
       templateParentIndex = row.indexOf('Parent');
+      baseTemplatesIndex = row.indexOf('Base Templates');
       sectionNameIndex = row.indexOf('Section');
       fieldNameIndex = row.indexOf('Field Name');
       machineNameIndex = row.indexOf('Machine Name');
@@ -697,6 +699,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       currentSchema = {
         templateName: '',
         templatePath: '',
+        baseTemplates: '',
         folder: '',
         sections: [],
         renderingParams: false,
@@ -706,6 +709,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
       if (row[templateNameIndex] && row[templateNameIndex] !== '') {
         currentSchema.templateName = row[templateNameIndex];
         currentSchema.templatePath = row[templateParentIndex];
+        currentSchema.baseTemplates = row[baseTemplatesIndex];
       }
     }
     // check for section
@@ -744,6 +748,7 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           inheritedFrom: '',
           template: '',
           path: '',
+          baseTemplates: '',
           section: sectionName,
         };
         section.fields.push(field);
@@ -765,10 +770,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
   // now that we have all our schema items, create our queries
   for (var i = 0; i < templateSchemas.length; i++) {
     const template = templateSchemas[i];
-    let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName).replace(
-      '[PARENTID]',
-      template.templatePath
-    );
+    let query = CreateTemplateQuery.replace('[TEMPLATENAME]', template.templateName)
+      .replace('[PARENTID]', template.templatePath)
+      .replace('[BASETEMPLATES]', template.baseTemplates);
 
     let sectionsFragments = '';
     for (var s = 0; s < template.sections.length; s++) {
@@ -885,7 +889,7 @@ export const ResultsToCsv = (templates: ITemplateSchema[]): void => {
 
   // first row of CSV
   let headerRow =
-    'Template,Path,Section,Name,Machine Name,Field Type,Required,Source,Default Value,Help Text,Inherited From';
+    'Template,Path,Base Templates,Section,Name,Machine Name,Field Type,Required,Source,Default Value,Help Text,Inherited From';
   csvData.push(headerRow);
 
   for (var i = 0; i < templates.length; i++) {
@@ -973,6 +977,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
     const templateRow: IField = {
       template: template.templateName + (template.renderingParams ? ' (Rendering Parameters)' : ''),
       path: template.templatePath,
+      baseTemplates: template.baseTemplates,
       section: '',
       name: '',
       machineName: '',
@@ -990,6 +995,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
       worksheet.data.push({
         template: '',
         path: '',
+        baseTemplates: '',
         section: template.sections[j].name,
         name: '',
         machineName: '',
@@ -1023,6 +1029,7 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
         [
           'Template',
           'Path',
+          'Base Templates',
           'Section',
           'Field Name',
           'Machine Name',

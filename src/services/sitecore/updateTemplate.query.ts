@@ -47,7 +47,14 @@ mutation {
 
 export const CreateTemplateQuery = gql`
   mutation {
-    createItemTemplate(input: { name: "[TEMPLATENAME]", parent: "[PARENTID]", sections: [[SECTIONFRAGMENTS]] }) {
+    createItemTemplate(
+      input: {
+        name: "[TEMPLATENAME]"
+        parent: "[PARENTID]"
+        baseTemplates: "[BASETEMPLATES]"
+        sections: [[SECTIONFRAGMENTS]]
+      }
+    ) {
       itemTemplate {
         name
         ownFields {

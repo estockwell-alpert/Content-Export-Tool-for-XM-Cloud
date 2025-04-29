@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       let templateResult: ITemplateSchema = {
         templateName: template.name,
         templatePath: template.path,
+        baseTemplates: template.baseTemplate?.value,
         folder: template.parent?.name,
         sections: [],
         renderingParams: false,
@@ -129,6 +130,7 @@ export async function POST(request: Request) {
           let fieldObj: IField = {
             template: '',
             path: '',
+            baseTemplates: '',
             section: '',
             name: field.title?.value,
             machineName: field.name,
@@ -172,6 +174,7 @@ export interface IWorksheetSchema {
 
 export interface ITemplateSchema {
   templateName: string;
+  baseTemplates: string;
   templatePath: string;
   renderingParams?: boolean;
   folder: string;
@@ -186,6 +189,7 @@ export interface ITemplateSection {
 export interface IField {
   template: string;
   path: string;
+  baseTemplates?: string;
   section: string;
   name: string;
   machineName: string;

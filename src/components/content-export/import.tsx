@@ -98,6 +98,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
     templates.push({
       templateName: 'Promo',
       templatePath: '{7479293E-4A3A-47C8-9370-2D32EF37E07C}',
+      baseTemplates: '{1930BBEB-7805-471A-A3BE-4858AC7CF696}',
       folder: 'Templates',
       sections: [
         {
@@ -163,6 +164,7 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
     const headers = [
       'Template',
       'Parent',
+      'Base Templates',
       'Section',
       'Field Name',
       'Machine Name',
@@ -439,6 +441,9 @@ export const ImportTool: FC<ImportToolProps> = ({ activeInstance }) => {
                     </ul>
                     <p>Optional CSV columns:</p>
                     <ul className="list-disc pl-4 space-y-1">
+                      <li>
+                        <strong>Base Templates</strong> - (optional) GUID IDs of base templates, separated by |
+                      </li>
                       <li>
                         <strong>Machine Name</strong> - (optional) name of field, if different from display name
                       </li>
