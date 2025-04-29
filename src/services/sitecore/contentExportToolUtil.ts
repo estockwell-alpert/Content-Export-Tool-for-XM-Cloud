@@ -782,7 +782,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           .replace('[FIELDTYPE]', field.fieldType)
           .replace('[TITLE]', field.name)
           .replace('[DEFAULT]', field.defaultValue ?? '')
-          .replace('[DESCRIPTION]', field.helpText ?? '');
+          .replace('[DESCRIPTION]', field.helpText ?? '')
+          .replace('[SOURCE]', field.source ?? '')
+          .replace('[SORTORDER]', ((f + 1) * 100).toString());
       }
 
       sectionsFragments += sectionFragment.replace('[FIELDFRAGMENTS]', fieldFragments);

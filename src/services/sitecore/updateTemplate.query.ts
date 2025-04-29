@@ -68,5 +68,5 @@ export const SectionFragment = gql`{
       }
   `;
 
-export const TemplateFieldFragment = gql`{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]" }
+export const TemplateFieldFragment = gql`{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]", source:"[SOURCE]", sortOrder:[SORTORDER] }
 `;
