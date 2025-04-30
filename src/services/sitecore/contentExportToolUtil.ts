@@ -623,6 +623,9 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
     return ['Failed to parse file'];
   }
 
+  let requiredFields: IField[] = [];
+  let requiredFieldIds: string[] = [];
+
   let templateSchemas: ITemplateSchema[] = [];
   let currentSchema: ITemplateSchema | null = null;
   let sectionName = '';
@@ -730,12 +733,22 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
           defaultValue: defaultValueIndex > -1 ? row[defaultValueIndex] : '',
           helpText: descriptionIndex > -1 ? row[descriptionIndex] : '',
           inheritedFrom: '',
-          template: '',
+          template: currentSchema.templateName,
           path: '',
           baseTemplates: '',
           section: sectionName,
         };
         section.fields.push(field);
+
+        if (
+          field.required &&
+          ((typeof field.required === 'string' &&
+            (field.required.toLowerCase() === 'true' || field.required?.toLowerCase() === 'yes')) ||
+            typeof field.required === 'boolean' ||
+            field.required.toString().toLowerCase() === '1')
+        ) {
+          requiredFields.push(field);
+        }
       }
 
       if (sectionIndex === -1) {
@@ -807,6 +820,72 @@ export const PostCreateTemplateQuery = async (instance: IInstance, file: File, c
         }
       } else {
         successfullQueries++;
+
+        // check for required fields
+        let resultsTemplate = results.data.createItemTemplate.itemTemplate.name;
+        let resultsFields = results.data.createItemTemplate.itemTemplate.ownFields.nodes;
+
+        for (let n = 0; n < resultsFields.length; n++) {
+          let resultField = resultsFields[n];
+          let requiredField = requiredFields.filter(
+            (field) => field.machineName === resultField.name && field.template === resultsTemplate
+          );
+
+          if (requiredField.length > 0) {
+            requiredFieldIds.push(resultField.templateFieldId);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+
+    if (loadingModal) {
+      loadingModal.style.display = 'none';
+    }
+
+    return [JSON.stringify(error)];
+  }
+
+  // required fields
+  let fieldQueries = [];
+  for (let r = 0; r < requiredFieldIds.length; r++) {
+    let query = UpdateQueryTemplate;
+    let requiredFieldId = requiredFieldIds[r];
+
+    // basic data
+    query = query.replace('pathFragment', requiredFieldId);
+    query = query.replace('ItemName', '');
+    query = query.replace('ItemTemplate', '');
+    query = query.replace('languageFragment', '');
+
+    let fieldFragments = `{ name: "Workflow", value: "{59D4EE10-627C-4FD3-A964-61A88B092CBC}" }`;
+
+    query = query.replace('fieldsFragment', fieldFragments);
+
+    const jsonQuery = {
+      query: query,
+    };
+
+    console.log(jsonQuery);
+    fieldQueries.push(jsonQuery);
+  }
+
+  let successfullFieldUpdates = 0;
+
+  try {
+    for (var i = 0; i < fieldQueries.length; i++) {
+      const results = await postToAuthApi(gqlEndpoint, authToken, JSON.stringify(fieldQueries[i]));
+      console.log('Results: ');
+      console.log(results);
+
+      if (results.errors) {
+        for (var j = 0; j < results.errors.length; j++) {
+          var error = results.errors[j];
+          errors.push(error.message.replace(/[\r\n]+/gm, ' '));
+        }
+      } else {
+        successfullFieldUpdates++;
       }
     }
   } catch (error) {

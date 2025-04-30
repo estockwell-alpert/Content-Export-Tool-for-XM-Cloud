@@ -195,7 +195,7 @@ export interface IField {
   name: string;
   machineName: string;
   fieldType: string;
-  required?: boolean;
+  required?: string;
   source: string;
   defaultValue?: string;
   helpText?: string;

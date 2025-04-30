@@ -163,3 +163,21 @@ export const SchemaQueryTemplate = gql`
     }
   }
 `;
+
+export const FieldUpdateQuery = gql`
+  mutation UpdateItem {
+    updateItem(
+      input: {
+        path: "[TEMPLATEFIELDID]"
+        fields: [{ name: "Workflow", value: "{59D4EE10-627C-4FD3-A964-61A88B092CBC}" }]
+      }
+    ) {
+      item {
+        name
+        workflow: field(name: "Workflow") {
+          value
+        }
+      }
+    }
+  }
+`;
