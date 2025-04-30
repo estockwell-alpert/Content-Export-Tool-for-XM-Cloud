@@ -567,7 +567,7 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   let templates = await GetTemplateSchema(instance, startItem);
 
-  templates = templates?.sort(compare);
+  templates = templates?.sort(templateSort);
 
   // CSV:
   //const csvString = ResultsToCsv(templates);
@@ -580,22 +580,6 @@ export const GenerateSchemaExport = async (instance: IInstance, startItem?: stri
 
   alert('Done - check your downloads!');
 };
-
-function compare(a: any, b: any) {
-  if (a.templateName < b.templateName) {
-    return -1;
-  } else if (a.templateName > b.templateName) {
-    return 1;
-  } else {
-    if (a.renderingParams && !b.renderingParams) {
-      return 1;
-    }
-    if (b.renderingParams && !a.renderingParams) {
-      return -1;
-    }
-    return 0;
-  }
-}
 
 export const PostCreateTemplateQuery = async (instance: IInstance, file: File, csvData?: any[]): Promise<string[]> => {
   errorHasBeenDisplayed = false;
@@ -1006,8 +990,14 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
         helpText: '',
         inheritedFrom: '',
       });
-      const dataLines = template.sections[j].fields;
-      worksheet.data = worksheet.data.concat(dataLines);
+
+      const fields = template.sections[j].fields;
+      const dataLines = fields?.sort(fieldsSort);
+      const dataLinesClean = dataLines.map((x: IField) => {
+        delete x.sortOrder;
+        return x;
+      });
+      worksheet.data = worksheet.data.concat(dataLinesClean);
     }
 
     // add empty line for spacing
@@ -1059,21 +1049,29 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
   console.log(`Exported data to xslx`);
 };
 
-export function resultsSort(a: any, b: any) {
-  var templateA = a.parent?.parent?.name;
-  var templateB = b.parent?.parent?.name;
-  var sectionA = a.parent?.name;
-  var sectionB = b.parent?.name;
-  if (templateA < templateB) {
+function templateSort(a: any, b: any) {
+  if (a.templateName < b.templateName) {
     return -1;
-  }
-  if (templateA > templateB) {
+  } else if (a.templateName > b.templateName) {
     return 1;
+  } else {
+    if (a.renderingParams && !b.renderingParams) {
+      return 1;
+    }
+    if (b.renderingParams && !a.renderingParams) {
+      return -1;
+    }
+    return 0;
   }
-  if (sectionA < sectionB) {
+}
+
+export function fieldsSort(a: IField, b: IField) {
+  let sortOrderA = a.sortOrder ?? 0;
+  let sortOrderB = b.sortOrder ?? 0;
+  if (sortOrderA < sortOrderB) {
     return -1;
   }
-  if (sectionA > sectionB) {
+  if (sortOrderA > sortOrderB) {
     return 1;
   }
   return 0;

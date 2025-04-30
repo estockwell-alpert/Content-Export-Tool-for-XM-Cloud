@@ -23,8 +23,8 @@ Additional formatting would be a nice-to-have but would probably take some time 
 SORTING - make Rendering params come second ✔
 Import - SOURCE ✔
 Import - Required
-Import - base templates
-Export - base templates
-Order of fields - obey Sortorder if present, automatically set Sortorder on import based on field index * 100
-Set Display Name as well as Title
+Import - base templates ✔
+Export - base templates ✔
+Order of fields - obey Sortorder if present, automatically set Sortorder on import based on field index * 100 ✔
+Set Display Name as well as Title 
 Move Required to after Field Type ✔

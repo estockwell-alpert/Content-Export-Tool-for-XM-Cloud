@@ -61,6 +61,7 @@ export const CreateTemplateQuery = gql`
           nodes {
             name
             type
+            templateFieldId
           }
         }
       }

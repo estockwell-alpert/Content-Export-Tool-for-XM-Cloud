@@ -155,6 +155,9 @@ export const SchemaQueryTemplate = gql`
           defaultValue: field(name: "Default value") {
             value
           }
+          sortOrder: field(name: "__Sortorder") {
+            value
+          }
         }
       }
     }

@@ -140,6 +140,7 @@ export async function POST(request: Request) {
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== template.itemId ? field.parent?.parent?.name : '',
+            sortOrder: parseInt(field.sortOrder?.value ?? 0),
           };
 
           if (section.fields.some((field) => field.name == fieldObj.name)) {
@@ -199,4 +200,5 @@ export interface IField {
   defaultValue?: string;
   helpText?: string;
   inheritedFrom?: string;
+  sortOrder?: number;
 }
