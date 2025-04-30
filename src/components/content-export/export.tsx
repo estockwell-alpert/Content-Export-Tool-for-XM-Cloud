@@ -4,8 +4,8 @@ import {
   GenerateContentExport,
   GenerateSchemaExport,
   GetTemplateSchema,
-  validateGuid,
 } from '@/services/sitecore/contentExportToolUtil';
+import { validateGuid } from '@/services/sitecore/helpers';
 import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
 import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';

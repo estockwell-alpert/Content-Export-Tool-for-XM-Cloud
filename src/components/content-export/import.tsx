@@ -1,6 +1,7 @@
 import { ITemplateSchema } from '@/app/api/export/schema/route';
 import { IInstance } from '@/models/IInstance';
-import { PostCreateTemplateQuery, PostMutationQuery, ResultsToXslx } from '@/services/sitecore/contentExportToolUtil';
+import { ResultsToXslx } from '@/services/sitecore/contentExportToolUtil';
+import { PostCreateTemplateQuery, PostMutationQuery } from '@/services/sitecore/importUtil';
 import Papa from 'papaparse';
 import { FC, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
