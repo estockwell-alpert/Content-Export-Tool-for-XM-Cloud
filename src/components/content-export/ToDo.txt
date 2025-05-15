@@ -18,3 +18,13 @@ Update IMPORT for new export format (Section on its own line)
 Additional formatting would be a nice-to-have but would probably take some time to figure out how to programmatically do that in Excel.
     Create groups for each template
     Add colors and borders to highlight where templates start/end
+
+
+SORTING - make Rendering params come second ✔
+Import - SOURCE ✔
+Import - Required
+Import - base templates ✔
+Export - base templates ✔
+Order of fields - obey Sortorder if present, automatically set Sortorder on import based on field index * 100 ✔
+Set Display Name as well as Title 
+Move Required to after Field Type ✔

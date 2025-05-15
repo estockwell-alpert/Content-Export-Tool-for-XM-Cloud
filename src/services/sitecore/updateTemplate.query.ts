@@ -47,13 +47,21 @@ mutation {
 
 export const CreateTemplateQuery = gql`
   mutation {
-    createItemTemplate(input: { name: "[TEMPLATENAME]", parent: "[PARENTID]", sections: [[SECTIONFRAGMENTS]] }) {
+    createItemTemplate(
+      input: {
+        name: "[TEMPLATENAME]"
+        parent: "[PARENTID]"
+        baseTemplates: "[BASETEMPLATES]"
+        sections: [[SECTIONFRAGMENTS]]
+      }
+    ) {
       itemTemplate {
         name
         ownFields {
           nodes {
             name
             type
+            templateFieldId
           }
         }
       }
@@ -68,5 +76,5 @@ export const SectionFragment = gql`{
       }
   `;
 
-export const TemplateFieldFragment = gql`{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]" }
+export const TemplateFieldFragment = gql`{ name: "[FIELDNAME]", type: "[FIELDTYPE]", title: "[TITLE]", defaultValue:"[DEFAULT]", description:"[DESCRIPTION]", source:"[SOURCE]", sortOrder:[SORTORDER] }
 `;

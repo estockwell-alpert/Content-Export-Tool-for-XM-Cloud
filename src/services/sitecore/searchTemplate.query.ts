@@ -155,6 +155,27 @@ export const SchemaQueryTemplate = gql`
           defaultValue: field(name: "Default value") {
             value
           }
+          sortOrder: field(name: "__Sortorder") {
+            value
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const FieldUpdateQuery = gql`
+  mutation UpdateItem {
+    updateItem(
+      input: {
+        path: "[TEMPLATEFIELDID]"
+        fields: [{ name: "Workflow", value: "{59D4EE10-627C-4FD3-A964-61A88B092CBC}" }]
+      }
+    ) {
+      item {
+        name
+        workflow: field(name: "Workflow") {
+          value
         }
       }
     }

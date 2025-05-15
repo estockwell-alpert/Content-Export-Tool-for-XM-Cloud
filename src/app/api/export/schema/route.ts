@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       let templateResult: ITemplateSchema = {
         templateName: template.name,
         templatePath: template.path,
+        baseTemplates: template.baseTemplate?.value,
         folder: template.parent?.name,
         sections: [],
         renderingParams: false,
@@ -129,15 +130,17 @@ export async function POST(request: Request) {
           let fieldObj: IField = {
             template: '',
             path: '',
+            baseTemplates: '',
             section: '',
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
-            source: field.source?.value,
             required: required ? true : undefined,
+            source: field.source?.value,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
             inheritedFrom: field.parent?.parent?.itemId !== template.itemId ? field.parent?.parent?.name : '',
+            sortOrder: parseInt(field.sortOrder?.value ?? 0),
           };
 
           if (section.fields.some((field) => field.name == fieldObj.name)) {
@@ -172,6 +175,7 @@ export interface IWorksheetSchema {
 
 export interface ITemplateSchema {
   templateName: string;
+  baseTemplates: string;
   templatePath: string;
   renderingParams?: boolean;
   folder: string;
@@ -186,13 +190,15 @@ export interface ITemplateSection {
 export interface IField {
   template: string;
   path: string;
+  baseTemplates?: string;
   section: string;
   name: string;
   machineName: string;
   fieldType: string;
+  required?: string;
   source: string;
-  required?: boolean;
   defaultValue?: string;
   helpText?: string;
   inheritedFrom?: string;
+  sortOrder?: number;
 }
