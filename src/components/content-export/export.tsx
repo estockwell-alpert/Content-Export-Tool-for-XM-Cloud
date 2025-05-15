@@ -6,7 +6,8 @@ import {
   GetTemplateSchema,
 } from '@/services/sitecore/contentExportToolUtil';
 import { validateGuid } from '@/services/sitecore/helpers';
-import { SchemaTemplate } from '@/services/sitecore/ScshemaTemplate';
+import { SchemaTemplate } from '@/services/sitecore/schemaTemplate.query';
+import { GraphQLClient } from 'graphql-request';
 import { FC, useEffect, useState } from 'react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -172,32 +173,23 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       const query = SchemaTemplate.replace('[templatename]', templateNames.trim());
       console.log(query);
 
-      fetch(activeInstance.graphQlEndpoint, {
-        method: 'POST',
-        headers: new Headers({ sc_apikey: activeInstance.apiToken, 'content-type': 'application/json' }),
-        body: query,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          // parse data
-          console.log(data);
+      const graphQLClient = new GraphQLClient(activeInstance.graphQlEndpoint);
+      graphQLClient.setHeader('sc_apikey', activeInstance.apiToken);
+      const data: any = await graphQLClient.request(query);
+      console.log(data);
 
-          const results = data.data.__type.fields;
-          console.log(results);
+      const results = data.__type.fields;
+      console.log(results);
 
-          for (var i = 0; i < results.length; i++) {
-            console.log(results[i]);
-            const result = results[i];
-            const field = result.name;
+      for (var i = 0; i < results.length; i++) {
+        console.log(results[i]);
+        const result = results[i];
+        const field = result.name;
 
-            fieldsList.push(field);
-          }
+        fieldsList.push(field);
+      }
 
-          setAvailableFields(fieldsList);
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
+      setAvailableFields(fieldsList);
     } else {
       if (!templates) {
         alert('Enter at least one template ID in the Templates field');

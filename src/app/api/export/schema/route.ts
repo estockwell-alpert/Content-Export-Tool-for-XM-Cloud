@@ -135,7 +135,7 @@ export async function POST(request: Request) {
             name: field.title?.value,
             machineName: field.name,
             fieldType: field.type?.value,
-            required: required ? true : undefined,
+            required: required ? 'true' : undefined,
             source: field.source?.value,
             defaultValue: field.defaultValue?.value,
             helpText: field.helpText?.value,
