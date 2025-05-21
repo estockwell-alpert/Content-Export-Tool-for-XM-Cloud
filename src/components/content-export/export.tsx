@@ -48,6 +48,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
   const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
+  const [contentMainRoot, setContentMainRoot] = useState<Root>();
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
@@ -159,15 +160,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
-  let contentMainRoot: Root | null;
-
   const resetTree = () => {
-    if (!contentMainRoot) {
-      const rootElem = document.getElementById(sitecoreRootId);
-      if (!rootElem) return;
-      contentMainRoot = createRoot(rootElem);
+    if (contentMainRoot) {
+      contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
     }
-    contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
   };
 
   const toggleNode = async (e: any) => {
@@ -301,6 +297,9 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   }, []);
 
   useEffect(() => {
+    const rootElem = document.getElementById(sitecoreRootId);
+    if (!rootElem) return;
+    setContentMainRoot(createRoot(rootElem));
     resetTree();
   }, [activeInstance]);
 
