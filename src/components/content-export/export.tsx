@@ -4,6 +4,7 @@ import {
   GenerateContentExport,
   GenerateSchemaExport,
   GetTemplateSchema,
+  IContentNode,
 } from '@/services/sitecore/contentExportToolUtil';
 import { validateGuid } from '@/services/sitecore/helpers';
 import { SchemaTemplate } from '@/services/sitecore/schemaTemplate.query';
@@ -179,6 +180,16 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     if (e.target.classList.contains('selected')) {
       e.target.classList.remove('selected');
       // remove id
+      let updatedSelections = currentSelections?.filter((item: IContentNode) => item.itemId !== id);
+      setCurrentSelections(updatedSelections);
+
+      if (startItem) {
+        let selectedItems = startItem.split(',');
+        selectedItems = selectedItems?.filter((itemId: string) => itemId !== id);
+
+        let selectedIds = updatedSelections?.map((item, index) => item.itemId);
+        setStartItem(selectedIds?.join(', '));
+      }
     } else {
       // add ID
       if (!startItem || startItem?.indexOf(id) === -1) {
@@ -189,7 +200,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         }
       }
 
-      let selectedItem = { itemId: id, name: name };
+      let selectedItem = { itemId: id, name: name, children: [] };
       let selectedItems: any[] =
         currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
       setCurrentSelections(selectedItems);
@@ -344,17 +355,25 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   return (
     <>
-      {browseContentOpen && (
-        <div id="content-tree" className="content-tree">
-          <div className="inner">
-            <div className="flex justify-between gap-2 mt-4">
-              <ul>
-                <ContentNode
-                  item={{ itemId: '{11111111-1111-1111-1111-111111111111}', name: 'sitecore', children: [] }}
-                  activeInstance={activeInstance}
-                  selectNode={selectNode}
-                ></ContentNode>
-              </ul>
+      <div id="content-tree" className={'content-tree ' + (browseContentOpen ? 'open' : '')}>
+        <div className="inner">
+          <div className="browse-box">
+            <ul>
+              <ContentNode
+                item={{
+                  itemId: '{11111111-1111-1111-1111-111111111111}',
+                  name: 'sitecore',
+                  children: [],
+                  hasChildren: true,
+                }}
+                activeInstance={activeInstance}
+                selectNode={selectNode}
+                currentSelections={currentSelections ?? []}
+              ></ContentNode>
+            </ul>
+          </div>
+          <div className="selected-box">
+            <div className="flex justify-between gap-2">
               <ul>
                 {currentSelections && (
                   <li>
@@ -374,7 +393,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       <Tabs defaultValue={'content'} className="w-full">
         <TabsList className="grid w-full grid-cols-2 border-b border-border">

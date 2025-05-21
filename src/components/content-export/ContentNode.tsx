@@ -6,9 +6,10 @@ interface ContentNodeProps {
   item: IContentNode;
   activeInstance?: IInstance;
   selectNode: (e: any) => void;
+  currentSelections: IContentNode[];
 }
 
-export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, selectNode }) => {
+export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, selectNode, currentSelections }) => {
   const [children, setChildren] = React.useState([]);
 
   const toggleNode = async (e: any) => {
@@ -34,14 +35,20 @@ export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, select
 
   return (
     <li data-name={item.name} data-id={item.itemId}>
-      <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>
+      {item.hasChildren && <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>}
       <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
         {item.name}
       </a>
       <ul id={item.itemId}>
         {children &&
           children.map((child, index) => (
-            <ContentNode key={index} item={child} selectNode={selectNode} activeInstance={activeInstance}></ContentNode>
+            <ContentNode
+              key={index}
+              item={child}
+              selectNode={selectNode}
+              activeInstance={activeInstance}
+              currentSelections={currentSelections}
+            ></ContentNode>
           ))}
       </ul>
     </li>

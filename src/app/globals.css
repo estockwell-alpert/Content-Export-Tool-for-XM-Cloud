@@ -224,10 +224,18 @@ button {
   z-index: 999;
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 12px;
-  width: 30%;
+  width: 50%;
   height: 50%;
-  overflow: scroll;
+  padding: 8px;
+}
+
+.browse-box,
+.selected-box {
+  width: 50%;
+  height: 100%;
+  overflow: auto;
+  display: inline-block;
+  padding: 4px 12px;
 }
 
 .content-tree {
@@ -238,10 +246,16 @@ button {
   top: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 999;
+  display: none;
+}
+
+.content-tree.open {
+  display: block;
 }
 
 .content-tree li {
   position: relative;
+  white-space: nowrap;
 }
 
 .browse-expand {
