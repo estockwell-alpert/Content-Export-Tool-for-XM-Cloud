@@ -49,6 +49,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
   const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
   const [contentMainRoot, setContentMainRoot] = useState<Root>();
+  const [currentSelections, setCurrentSelections] = useState<any[]>();
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
@@ -161,13 +162,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
 
   const resetTree = () => {
+    console.log('StartItem: ' + startItem);
     if (contentMainRoot) {
       contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
     }
   };
 
   const toggleNode = async (e: any) => {
-    console.log(e);
+    console.log('StartItem: ' + startItem);
     if (!activeInstance) return;
     if (!e.target.classList.contains('loaded')) {
       const id = e.target.parentElement.getAttribute('data-id');
@@ -199,20 +201,38 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
 
   const selectNode = (e: any) => {
-    const id = e.target.parentElement.getAttribute('data-id');
+    console.log('StartItem: ' + startItem);
+    const id = e.target.parentElement
+      .getAttribute('data-id')
+      .replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    const name = e.target.parentElement.getAttribute('data-name');
     console.log(id);
 
-    if (!startItem || startItem?.indexOf(id) === -1) {
-      if (startItem) {
-        setStartItem(startItem + ', ' + id);
-      } else {
-        setStartItem(id);
-      }
+    if (e.target.classList.contains('selected')) {
+      e.target.classList.remove('selected');
+      // remove id
+    } else {
+      // add ID
+      //if (!startItem || startItem?.indexOf(id) === -1) {
+      //  if (startItem) {
+      //    setStartItem(startItem + ', ' + id);
+      //  } else {
+      //    setStartItem(id);
+      //  }
+      // }
+
+      let selectedItem = { itemId: id, name: name };
+      let selectedItems: any[] =
+        currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
+      setCurrentSelections(selectedItems);
+
+      e.target.classList.add('selected');
     }
   };
 
   // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = async () => {
+    console.log('StartItem: ' + startItem);
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
       alert('You must select an instance first');
@@ -297,6 +317,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   }, []);
 
   useEffect(() => {
+    console.log('StartItem: ' + startItem);
     const rootElem = document.getElementById(sitecoreRootId);
     if (!rootElem) return;
     setContentMainRoot(createRoot(rootElem));
@@ -358,11 +379,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       <ul id={id}>
         {children.map((child, index) => (
           <li key={index} data-name={child.name} data-id={child.itemId}>
-            {child.hasChildren && (
-              <a className="browse-expand" onClick={(e) => toggleNode(e)}>
-                +
-              </a>
-            )}
+            {child.hasChildren && <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>}
             <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
               {child.name}
             </a>
@@ -379,21 +396,27 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         <div id="content-tree" className="content-tree">
           <div className="inner">
             <div className="flex items-center gap-2 mt-4">
+              <ul>
+                <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
+                  <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>
+                  <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
+                    sitecore
+                  </a>
+                  <ul id={sitecoreRootId}></ul>
+                </li>
+              </ul>
+              <ul>
+                {currentSelections &&
+                  currentSelections?.map((item, index) => (
+                    <li data-id={item.itemId} data-name={item.name} key={index}>
+                      {item.name}
+                    </li>
+                  ))}
+              </ul>
               <Button variant="ghost" size="sm" onClick={() => setBrowseContentOpen(false)}>
                 Close
               </Button>
             </div>
-            <ul>
-              <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
-                <a className="browse-expand" onClick={(e) => toggleNode(e)}>
-                  +
-                </a>
-                <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
-                  sitecore
-                </a>
-                <ul id={sitecoreRootId}></ul>
-              </li>
-            </ul>
           </div>
         </div>
       )}
