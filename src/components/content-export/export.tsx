@@ -3,12 +3,14 @@ import { ISettings } from '@/models/ISettings';
 import {
   GenerateContentExport,
   GenerateSchemaExport,
+  GetItemChildren,
   GetTemplateSchema,
 } from '@/services/sitecore/contentExportToolUtil';
 import { validateGuid } from '@/services/sitecore/helpers';
 import { SchemaTemplate } from '@/services/sitecore/schemaTemplate.query';
 import { GraphQLClient } from 'graphql-request';
 import { FC, useEffect, useState } from 'react';
+import { createRoot, Root } from 'react-dom/client';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -45,6 +47,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorTemplatesStartItem, setErrorTemplatesStartItem] = useState<boolean>(false);
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
+
+  const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validateGuid(event.target.value ?? '')) {
@@ -154,6 +158,66 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
+  const browseContent = async () => {
+    // show browse modal
+  };
+
+  let contentMainRoot: Root | null;
+
+  const resetTree = () => {
+    if (!contentMainRoot) {
+      const rootElem = document.getElementById(sitecoreRootId);
+      if (!rootElem) return;
+      contentMainRoot = createRoot(rootElem);
+    }
+    contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
+  };
+
+  const toggleNode = async (e: any) => {
+    console.log(e);
+    if (!activeInstance) return;
+    if (!e.target.classList.contains('loaded')) {
+      const id = e.target.parentElement.getAttribute('data-id');
+      const results = await GetItemChildren(activeInstance, id);
+      const children = results.children;
+      console.log(children);
+
+      // append ul root
+      let root = null;
+      if (id + '-root' === sitecoreRootId && contentMainRoot) {
+        root = contentMainRoot;
+      } else {
+        const rootElem = document.getElementById(id + '-root');
+        if (!rootElem) return;
+        root = createRoot(rootElem);
+      }
+      const innerTree = getInnerBrowseTree(id, children);
+      root?.render(innerTree);
+
+      e.target.classList.add('loaded');
+      e.target.classList.add('open');
+    } else {
+      if (e.target.classList.contains('open')) {
+        e.target.classList.remove('open');
+      } else {
+        e.target.classList.add('open');
+      }
+    }
+  };
+
+  const selectNode = async (e: any) => {
+    const id = e.target.parentElement.getAttribute('data-id');
+    console.log(id);
+
+    if (startItem?.indexOf(id) === -1) {
+      if (startItem) {
+        setStartItem(startItem + ', ' + id);
+      } else {
+        setStartItem(id);
+      }
+    }
+  };
+
   // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = async () => {
     setAvailableFields([]);
@@ -239,6 +303,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   }, []);
 
+  useEffect(() => {
+    resetTree();
+  }, [activeInstance]);
+
   const handleSaveSettings = (newSettings: Omit<ISettings, 'id'>) => {
     const settings: ISettings = {
       ...newSettings,
@@ -287,6 +355,24 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setUpdatedBy(setting.updatedBy);
     setUpdatedDate(setting.updatedDate);
     setConvertGuids(setting.convertGuids);
+  };
+
+  const getInnerBrowseTree = (id: string, children: any[]) => {
+    return (
+      <ul id={id}>
+        {children.map((child, index) => (
+          <li key={index} data-name={child.name} data-id={child.itemId}>
+            <a className="browse-expand" onClick={(e) => toggleNode(e)}>
+              +
+            </a>
+            <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
+              {child.name}
+            </a>
+            <ul id={child.itemId + '-root'}></ul>
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
@@ -358,12 +444,32 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 <Card className="rounded-sm border bg-card p-6">
                   <CardTitle>Filters</CardTitle>
                   {/* Start Items Section */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="default" size="sm" onClick={() => browseContent()}>
+                      Browse
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
+                      Clear
+                    </Button>
+                  </div>
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item(s)</label>
-                      <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
-                        Clear
-                      </Button>
+
+                      <div className="content-tree">
+                        <ul>
+                          <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
+                            <a className="browse-expand" onClick={(e) => toggleNode(e)}>
+                              +
+                            </a>
+                            <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
+                              sitecore
+                            </a>
+                            <ul id={sitecoreRootId}></ul>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                     <Textarea
                       value={startItem}
@@ -622,6 +728,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item</label>
+
                       <Button variant="ghost" size="sm" onClick={() => setTemplatesStartItem('')}>
                         Clear
                       </Button>
