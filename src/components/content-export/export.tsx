@@ -47,6 +47,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorTemplatesStartItem, setErrorTemplatesStartItem] = useState<boolean>(false);
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
+  const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
@@ -158,10 +159,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
-  const browseContent = async () => {
-    // show browse modal
-  };
-
   let contentMainRoot: Root | null;
 
   const resetTree = () => {
@@ -205,11 +202,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
-  const selectNode = async (e: any) => {
+  const selectNode = (e: any) => {
     const id = e.target.parentElement.getAttribute('data-id');
     console.log(id);
 
-    if (startItem?.indexOf(id) === -1) {
+    if (!startItem || startItem?.indexOf(id) === -1) {
       if (startItem) {
         setStartItem(startItem + ', ' + id);
       } else {
@@ -362,9 +359,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       <ul id={id}>
         {children.map((child, index) => (
           <li key={index} data-name={child.name} data-id={child.itemId}>
-            <a className="browse-expand" onClick={(e) => toggleNode(e)}>
-              +
-            </a>
+            {child.hasChildren && (
+              <a className="browse-expand" onClick={(e) => toggleNode(e)}>
+                +
+              </a>
+            )}
             <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
               {child.name}
             </a>
@@ -377,6 +376,29 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   return (
     <>
+      {browseContentOpen && (
+        <div id="content-tree" className="content-tree">
+          <div className="inner">
+            <div className="flex items-center gap-2 mt-4">
+              <Button variant="ghost" size="sm" onClick={() => setBrowseContentOpen(false)}>
+                Close
+              </Button>
+            </div>
+            <ul>
+              <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
+                <a className="browse-expand" onClick={(e) => toggleNode(e)}>
+                  +
+                </a>
+                <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
+                  sitecore
+                </a>
+                <ul id={sitecoreRootId}></ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue={'content'} className="w-full">
         <TabsList className="grid w-full grid-cols-2 border-b border-border">
           <TabsTrigger value="content" className="">
@@ -444,31 +466,17 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 <Card className="rounded-sm border bg-card p-6">
                   <CardTitle>Filters</CardTitle>
                   {/* Start Items Section */}
-                  <div className="flex items-center gap-2 mt-4">
-                    <Button variant="default" size="sm" onClick={() => browseContent()}>
-                      Browse
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
-                      Clear
-                    </Button>
-                  </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item(s)</label>
-
-                      <div className="content-tree">
-                        <ul>
-                          <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
-                            <a className="browse-expand" onClick={(e) => toggleNode(e)}>
-                              +
-                            </a>
-                            <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
-                              sitecore
-                            </a>
-                            <ul id={sitecoreRootId}></ul>
-                          </li>
-                        </ul>
+                      <div className="flex items-center gap-2 mt-4">
+                        <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
+                          Browse
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
+                          Clear
+                        </Button>
                       </div>
                     </div>
                     <Textarea
