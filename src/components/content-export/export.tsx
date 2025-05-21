@@ -3,7 +3,6 @@ import { ISettings } from '@/models/ISettings';
 import {
   GenerateContentExport,
   GenerateSchemaExport,
-  GetItemChildren,
   GetTemplateSchema,
 } from '@/services/sitecore/contentExportToolUtil';
 import { validateGuid } from '@/services/sitecore/helpers';
@@ -18,6 +17,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
+import { ContentNode } from './ContentNode';
 import { SaveSettingsModal } from './save-settings-modal';
 
 interface ExportToolProps {
@@ -168,38 +168,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
-  const toggleNode = async (e: any) => {
-    console.log('StartItem: ' + startItem);
-    if (!activeInstance) return;
-    if (!e.target.classList.contains('loaded')) {
-      const id = e.target.parentElement.getAttribute('data-id');
-      const results = await GetItemChildren(activeInstance, id);
-      const children = results.children;
-      console.log(children);
-
-      // append ul root
-      let root = null;
-      if (id + '-root' === sitecoreRootId && contentMainRoot) {
-        root = contentMainRoot;
-      } else {
-        const rootElem = document.getElementById(id + '-root');
-        if (!rootElem) return;
-        root = createRoot(rootElem);
-      }
-      const innerTree = getInnerBrowseTree(id, children);
-      root?.render(innerTree);
-
-      e.target.classList.add('loaded');
-      e.target.classList.add('open');
-    } else {
-      if (e.target.classList.contains('open')) {
-        e.target.classList.remove('open');
-      } else {
-        e.target.classList.add('open');
-      }
-    }
-  };
-
   const selectNode = (e: any) => {
     console.log('StartItem: ' + startItem);
     const id = e.target.parentElement
@@ -213,13 +181,13 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       // remove id
     } else {
       // add ID
-      //if (!startItem || startItem?.indexOf(id) === -1) {
-      //  if (startItem) {
-      //    setStartItem(startItem + ', ' + id);
-      //  } else {
-      //    setStartItem(id);
-      //  }
-      // }
+      if (!startItem || startItem?.indexOf(id) === -1) {
+        if (startItem) {
+          setStartItem(startItem + ', ' + id);
+        } else {
+          setStartItem(id);
+        }
+      }
 
       let selectedItem = { itemId: id, name: name };
       let selectedItems: any[] =
@@ -374,38 +342,25 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     setConvertGuids(setting.convertGuids);
   };
 
-  const getInnerBrowseTree = (id: string, children: any[]) => {
-    return (
-      <ul id={id}>
-        {children.map((child, index) => (
-          <li key={index} data-name={child.name} data-id={child.itemId}>
-            {child.hasChildren && <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>}
-            <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
-              {child.name}
-            </a>
-            <ul id={child.itemId + '-root'}></ul>
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
   return (
     <>
       {browseContentOpen && (
         <div id="content-tree" className="content-tree">
           <div className="inner">
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex justify-between gap-2 mt-4">
               <ul>
-                <li data-name="sitecore" data-id="{11111111-1111-1111-1111-111111111111}">
-                  <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>
-                  <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
-                    sitecore
-                  </a>
-                  <ul id={sitecoreRootId}></ul>
-                </li>
+                <ContentNode
+                  item={{ itemId: '{11111111-1111-1111-1111-111111111111}', name: 'sitecore', children: [] }}
+                  activeInstance={activeInstance}
+                  selectNode={selectNode}
+                ></ContentNode>
               </ul>
               <ul>
+                {currentSelections && (
+                  <li>
+                    <b>selected:</b>
+                  </li>
+                )}
                 {currentSelections &&
                   currentSelections?.map((item, index) => (
                     <li data-id={item.itemId} data-name={item.name} key={index}>

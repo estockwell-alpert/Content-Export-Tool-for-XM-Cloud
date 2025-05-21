@@ -576,3 +576,9 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
   XLSX.writeFile(workbook, `${fileName ?? 'Templates Schema'}.xlsx`);
   console.log(`Exported data to xslx`);
 };
+
+export interface IContentNode {
+  itemId: string;
+  name: string;
+  children: IContentNode[];
+}
