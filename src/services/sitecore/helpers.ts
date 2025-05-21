@@ -133,3 +133,7 @@ export function fieldsSort(a: IField, b: IField) {
   }
   return 0;
 }
+
+export const convertStringToGuid = (id: string) => {
+  return id.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+};

@@ -6,7 +6,7 @@ import {
   GetTemplateSchema,
   IContentNode,
 } from '@/services/sitecore/contentExportToolUtil';
-import { validateGuid } from '@/services/sitecore/helpers';
+import { convertStringToGuid, validateGuid } from '@/services/sitecore/helpers';
 import { SchemaTemplate } from '@/services/sitecore/schemaTemplate.query';
 import { GraphQLClient } from 'graphql-request';
 import { FC, useEffect, useState } from 'react';
@@ -53,6 +53,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [currentSelections, setCurrentSelections] = useState<any[]>();
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
+
+  const clearStartItem = () => {
+    setStartItem('');
+    setCurrentSelections([]);
+  };
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validateGuid(event.target.value ?? '')) {
@@ -171,14 +176,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   const selectNode = (e: any) => {
     console.log('StartItem: ' + startItem);
-    const id = e.target.parentElement
-      .getAttribute('data-id')
-      .replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
     const name = e.target.parentElement.getAttribute('data-name');
     console.log(id);
 
     if (e.target.classList.contains('selected')) {
-      e.target.classList.remove('selected');
       // remove id
       let updatedSelections = currentSelections?.filter((item: IContentNode) => item.itemId !== id);
       setCurrentSelections(updatedSelections);
@@ -204,8 +206,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       let selectedItems: any[] =
         currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
       setCurrentSelections(selectedItems);
-
-      e.target.classList.add('selected');
     }
   };
 
@@ -470,7 +470,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                         <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
                           Browse
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
+                        <Button variant="ghost" size="sm" onClick={() => clearStartItem()}>
                           Clear
                         </Button>
                       </div>

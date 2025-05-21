@@ -1,5 +1,6 @@
 import { IInstance } from '@/models/IInstance';
 import { GetItemChildren, IContentNode } from '@/services/sitecore/contentExportToolUtil';
+import { convertStringToGuid } from '@/services/sitecore/helpers';
 import React, { FC } from 'react';
 
 interface ContentNodeProps {
@@ -33,10 +34,16 @@ export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, select
     }
   };
 
+  const isSelected = () => {
+    const isSelected = currentSelections.some((node) => node.itemId === convertStringToGuid(item.itemId));
+    console.log('Is ' + item.name + ' selected: ' + isSelected);
+    return isSelected;
+  };
+
   return (
     <li data-name={item.name} data-id={item.itemId}>
       {item.hasChildren && <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>}
-      <a className="sitecore-node" onDoubleClick={(e) => selectNode(e)}>
+      <a className={'sitecore-node ' + (isSelected() ? 'selected' : '')} onDoubleClick={(e) => selectNode(e)}>
         {item.name}
       </a>
       <ul id={item.itemId}>
