@@ -28,7 +28,7 @@ interface ExportToolProps {
 }
 
 export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen, exportOpen }) => {
-  const [startItem, setStartItem] = useState<string>();
+  const [startItem, setStartItem] = useState<string>('');
   const [templatesStartItem, setTemplatesStartItem] = useState<string>();
   const [templates, setTemplates] = useState<string>();
   const [templateNames, setTemplateNames] = useState<string>();
@@ -65,7 +65,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     } else {
       setErrorStartItem(false);
     }
-    setStartItem(event.target.value);
+    const inputValue = event.target.value;
+    setStartItem(inputValue);
   };
   const handleTemplatesStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTemplatesStartItem(event.target.value);
@@ -168,14 +169,12 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   };
 
   const resetTree = () => {
-    console.log('StartItem: ' + startItem);
     if (contentMainRoot) {
       contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
     }
   };
 
   const selectNode = (e: any) => {
-    console.log('StartItem: ' + startItem);
     const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
     const name = e.target.parentElement.getAttribute('data-name');
     console.log(id);
@@ -184,24 +183,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       // remove id
       let updatedSelections = currentSelections?.filter((item: IContentNode) => item.itemId !== id);
       setCurrentSelections(updatedSelections);
-
-      if (startItem) {
-        let selectedItems = startItem.split(',');
-        selectedItems = selectedItems?.filter((itemId: string) => itemId !== id);
-
-        let selectedIds = updatedSelections?.map((item, index) => item.itemId);
-        setStartItem(selectedIds?.join(', '));
-      }
     } else {
       // add ID
-      if (!startItem || startItem?.indexOf(id) === -1) {
-        if (startItem) {
-          setStartItem(startItem + ', ' + id);
-        } else {
-          setStartItem(id);
-        }
-      }
-
       let selectedItem = { itemId: id, name: name, children: [] };
       let selectedItems: any[] =
         currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
@@ -211,7 +194,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = async () => {
-    console.log('StartItem: ' + startItem);
     setAvailableFields([]);
     if (!activeInstance?.graphQlEndpoint || !activeInstance.apiToken) {
       alert('You must select an instance first');
@@ -296,7 +278,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   }, []);
 
   useEffect(() => {
-    console.log('StartItem: ' + startItem);
     const rootElem = document.getElementById(sitecoreRootId);
     if (!rootElem) return;
     setContentMainRoot(createRoot(rootElem));
@@ -340,7 +321,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
-    setStartItem(setting.startItem);
+    setStartItem(setting.startItem ?? '');
     setTemplates(setting.templates);
     setFields(setting.fields);
     setLanguages(setting.languages);
@@ -361,6 +342,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         setBrowseContentOpen={setBrowseContentOpen}
         selectNode={selectNode}
         currentSelections={currentSelections ?? []}
+        startItem={startItem ?? ''}
+        setStartItem={setStartItem}
       ></ContentBrowseModal>
 
       <Tabs defaultValue={'content'} className="w-full">

@@ -281,3 +281,10 @@ a.sitecore-node {
 .content-tree ul.open {
   display: block;
 }
+
+.content-tree .selected-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
