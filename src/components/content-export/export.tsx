@@ -30,7 +30,7 @@ interface ExportToolProps {
 export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen, exportOpen }) => {
   const [startItem, setStartItem] = useState<string>('');
   const [templatesStartItem, setTemplatesStartItem] = useState<string>();
-  const [templates, setTemplates] = useState<string>();
+  const [templates, setTemplates] = useState<string>('');
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
   const [languages, setLanguages] = useState<string>();
@@ -49,8 +49,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
   const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
+  const [browseTemplatesOpen, setBrowseTemplatesOpen] = useState<boolean>(false);
   const [contentMainRoot, setContentMainRoot] = useState<Root>();
   const [currentSelections, setCurrentSelections] = useState<any[]>([]);
+  const [currentTemplateSelections, setCurrentTemplateSelections] = useState<any[]>([]);
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
@@ -177,7 +179,6 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const selectNode = (e: any) => {
     const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
     const name = e.target.parentElement.getAttribute('data-name');
-    console.log(id);
 
     if (e.target.classList.contains('selected')) {
       // remove id
@@ -189,6 +190,23 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       let selectedItems: any[] =
         currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
       setCurrentSelections(selectedItems);
+    }
+  };
+
+  const selectTemplateNode = (e: any) => {
+    const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
+    const name = e.target.parentElement.getAttribute('data-name');
+
+    if (e.target.classList.contains('selected')) {
+      // remove id
+      let updatedSelections = currentTemplateSelections?.filter((item: IContentNode) => item.itemId !== id);
+      setCurrentTemplateSelections(updatedSelections);
+    } else {
+      // add ID
+      let selectedItem = { itemId: id, name: name, children: [] };
+      let selectedItems: any[] =
+        currentTemplateSelections === undefined ? [selectedItem] : currentTemplateSelections?.concat(selectedItem);
+      setCurrentTemplateSelections(selectedItems);
     }
   };
 
@@ -322,7 +340,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
 
     setStartItem(setting.startItem ?? '');
-    setTemplates(setting.templates);
+    setTemplates(setting.templates ?? '');
     setFields(setting.fields);
     setLanguages(setting.languages);
     setIncludeLang(setting.includeLang);
@@ -336,6 +354,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   return (
     <>
+      {/* Content Browse */}
       <ContentBrowseModal
         activeInstance={activeInstance}
         browseContentOpen={browseContentOpen}
@@ -345,6 +364,20 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         startItem={startItem ?? ''}
         setStartItem={setStartItem}
         setCurrentSelections={setCurrentSelections}
+        startNode={{ itemId: '{11111111-1111-1111-1111-111111111111}', name: 'sitecore' }}
+      ></ContentBrowseModal>
+
+      {/* Template Browse */}
+      <ContentBrowseModal
+        activeInstance={activeInstance}
+        browseContentOpen={browseTemplatesOpen}
+        setBrowseContentOpen={setBrowseTemplatesOpen}
+        selectNode={selectTemplateNode}
+        currentSelections={currentTemplateSelections ?? []}
+        startItem={templatesStartItem ?? ''}
+        setStartItem={setTemplates}
+        setCurrentSelections={setCurrentTemplateSelections}
+        startNode={{ itemId: '{3C1715FE-6A13-4FCF-845F-DE308BA9741D}', name: 'templates' }}
       ></ContentBrowseModal>
 
       <Tabs defaultValue={'content'} className="w-full">
@@ -452,9 +485,14 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Templates</label>
-                      <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
-                        Clear
-                      </Button>
+                      <div className="flex items-center gap-2 mt-4">
+                        <Button variant="default" size="sm" onClick={() => setBrowseTemplatesOpen(true)}>
+                          Browse
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
+                          Clear
+                        </Button>
+                      </div>
                     </div>
                     <Textarea
                       value={templates}

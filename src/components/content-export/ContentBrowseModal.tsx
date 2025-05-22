@@ -14,6 +14,7 @@ interface ContentBrowseModalProps {
   setBrowseContentOpen: Dispatch<SetStateAction<boolean>>;
   startItem: string;
   setStartItem: Dispatch<SetStateAction<string>>;
+  startNode: { itemId: string; name: string };
 }
 
 export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
@@ -25,17 +26,13 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
   setBrowseContentOpen,
   startItem,
   setStartItem,
+  startNode,
 }) => {
   const confirmSelection = () => {
     let startItems = startItem?.split(',');
     let newIds = currentSelections
       ?.map((item) => item.itemId.trim())
       .filter((newId) => !startItems.some((startId) => stripGuid(startId) === stripGuid(newId)));
-
-    console.log('Preexisting Start Items: ');
-    console.log(startItems);
-    console.log('New Ids: ');
-    console.log(newIds);
 
     let udpatedStartItems = startItems.concat(newIds).filter((id) => id && id !== '');
     setStartItem(udpatedStartItems?.join(', '));
@@ -55,8 +52,8 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
             <ul>
               <ContentNode
                 item={{
-                  itemId: '{11111111-1111-1111-1111-111111111111}',
-                  name: 'sitecore',
+                  itemId: startNode.itemId,
+                  name: startNode.name,
                   children: [],
                   hasChildren: true,
                 }}
