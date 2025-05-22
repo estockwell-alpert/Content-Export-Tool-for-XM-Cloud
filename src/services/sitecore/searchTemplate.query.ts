@@ -201,3 +201,17 @@ export const ItemChildrenQuery = gql`
     }
   }
 `;
+
+export const EdgeItemChildrenQuery = gql`
+  {
+    item(path: "[ITEMID]", language: "en") {
+      children {
+        results {
+          name
+          id
+          hasChildren
+        }
+      }
+    }
+  }
+`;

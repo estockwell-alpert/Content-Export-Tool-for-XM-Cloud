@@ -317,7 +317,7 @@ export const GetItemChildren = async (instance: IInstance, itemId: string): Prom
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ gqlEndpoint, gqlApiKey, itemId }),
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, itemId, authoringEndpoint }),
   });
 
   if (!response.ok) {

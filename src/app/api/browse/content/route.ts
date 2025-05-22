@@ -1,39 +1,49 @@
-import { ItemChildrenQuery } from '@/services/sitecore/searchTemplate.query';
+import { EdgeItemChildrenQuery, ItemChildrenQuery } from '@/services/sitecore/searchTemplate.query';
+import { GraphQLClient } from 'graphql-request';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    console.log('CONTENT API');
-
     const body = await request.json();
-    const { gqlEndpoint, gqlApiKey, itemId } = body;
+    const { gqlEndpoint, gqlApiKey, itemId, authoringEndpoint } = body;
 
-    // get all templates...
-    const contentQuery = ItemChildrenQuery.replace('[ITEMID]', itemId);
-    let query = {
-      query: contentQuery,
-    };
+    if (authoringEndpoint) {
+      const contentQuery = ItemChildrenQuery.replace('[ITEMID]', itemId);
+      let query = {
+        query: contentQuery,
+      };
 
-    console.log('Run content query on ' + itemId);
+      const response: any = await fetch(gqlEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + gqlApiKey,
+        },
+        body: JSON.stringify(query),
+      });
 
-    console.log(query);
+      const jsonResults = await response.json();
 
-    const allTemplatesResponse: any = await fetch(gqlEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + gqlApiKey,
-      },
-      body: JSON.stringify(query),
-    });
+      console.log(jsonResults);
 
-    const jsonResults = await allTemplatesResponse.json();
+      const results = jsonResults?.data?.item?.children?.nodes;
 
-    console.log(JSON.stringify(jsonResults));
+      return NextResponse.json({ children: results });
+    } else {
+      const contentQuery = EdgeItemChildrenQuery.replace('[ITEMID]', itemId);
+      const graphQLClient = new GraphQLClient(gqlEndpoint);
+      graphQLClient.setHeader('sc_apikey', gqlApiKey);
 
-    const results = jsonResults?.data?.item?.children?.nodes;
+      const jsonResults: any = await graphQLClient.request(contentQuery);
 
-    return NextResponse.json({ children: results });
+      const results = jsonResults?.item?.children?.results?.map((item: any) => ({
+        itemId: item.id,
+        name: item.name,
+        hasChildren: item.hasChildren,
+      }));
+
+      return NextResponse.json({ children: results });
+    }
   } catch (error) {
     console.error('Error posting query:', error);
     return NextResponse.json({ error: 'Failed to fetch results' }, { status: 500 });

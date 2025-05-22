@@ -10,7 +10,6 @@ interface ContentNodeProps {
   selectNode: (e: any) => void;
   currentSelections: IContentNode[];
   templatesOnly?: boolean;
-  isTemplate?: boolean;
 }
 
 export const ContentNode: FC<ContentNodeProps> = ({
@@ -19,7 +18,6 @@ export const ContentNode: FC<ContentNodeProps> = ({
   selectNode,
   currentSelections,
   templatesOnly,
-  isTemplate,
 }) => {
   const [children, setChildren] = React.useState([]);
   const [isOpen, setIsOpen] = React.useState<boolean>(false);

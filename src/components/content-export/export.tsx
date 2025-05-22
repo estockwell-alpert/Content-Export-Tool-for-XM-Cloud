@@ -453,11 +453,10 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item(s)</label>
                       <div className="flex items-center gap-2 mt-4">
-                        {activeInstance?.instanceType === enumInstanceType.auth && (
-                          <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
-                            Browse
-                          </Button>
-                        )}
+                        <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
+                          Browse
+                        </Button>
+
                         <Button variant="ghost" size="sm" onClick={() => clearStartItem()}>
                           Clear
                         </Button>
