@@ -1,6 +1,7 @@
 import { IInstance } from '@/models/IInstance';
 import { GetItemChildren, IContentNode } from '@/services/sitecore/contentExportToolUtil';
 import { convertStringToGuid } from '@/services/sitecore/helpers';
+import cn from 'classnames';
 import React, { FC } from 'react';
 
 interface ContentNodeProps {
@@ -12,41 +13,45 @@ interface ContentNodeProps {
 
 export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, selectNode, currentSelections }) => {
   const [children, setChildren] = React.useState([]);
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = React.useState<boolean>(false);
 
   const toggleNode = async (e: any) => {
     if (!activeInstance) return;
-    if (!e.target.classList.contains('loaded')) {
+    if (!isLoaded) {
       const id = e.target.parentElement.getAttribute('data-id');
       const results = await GetItemChildren(activeInstance, id);
       const children = results.children;
       console.log(children);
 
       setChildren(children);
-
-      e.target.classList.add('loaded');
-      e.target.classList.add('open');
+      setIsLoaded(true);
+      setIsOpen(true);
     } else {
-      if (e.target.classList.contains('open')) {
-        e.target.classList.remove('open');
+      if (isOpen) {
+        setIsOpen(false);
       } else {
-        e.target.classList.add('open');
+        setIsOpen(true);
       }
     }
   };
 
   const isSelected = () => {
     const isSelected = currentSelections.some((node) => node.itemId === convertStringToGuid(item.itemId));
-    console.log('Is ' + item.name + ' selected: ' + isSelected);
     return isSelected;
   };
 
   return (
     <li data-name={item.name} data-id={item.itemId}>
-      {item.hasChildren && <a className="browse-expand" onClick={(e) => toggleNode(e)}></a>}
-      <a className={'sitecore-node ' + (isSelected() ? 'selected' : '')} onDoubleClick={(e) => selectNode(e)}>
+      {item.hasChildren && (
+        <a className="browse-expand" onClick={(e) => toggleNode(e)}>
+          {isOpen ? '-' : '+'}
+        </a>
+      )}
+      <a className={cn('sitecore-node', isSelected() ? 'selected' : '')} onDoubleClick={(e) => selectNode(e)}>
         {item.name}
       </a>
-      <ul id={item.itemId}>
+      <ul id={item.itemId} className={isOpen ? 'open' : ''}>
         {children &&
           children.map((child, index) => (
             <ContentNode

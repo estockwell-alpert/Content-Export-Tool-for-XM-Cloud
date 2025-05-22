@@ -278,14 +278,6 @@ a.sitecore-node {
   display: none;
 }
 
-.content-tree .browse-expand.open + a + ul {
+.content-tree ul.open {
   display: block;
-}
-
-.content-tree .browse-expand:before {
-  content: '+';
-}
-
-.content-tree .browse-expand.open:before {
-  content: '-';
 }
