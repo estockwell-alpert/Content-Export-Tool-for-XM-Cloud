@@ -9,6 +9,7 @@ interface ContentBrowseModalProps {
   activeInstance?: IInstance;
   selectNode: (e: any) => void;
   currentSelections: IContentNode[];
+  setCurrentSelections: Dispatch<SetStateAction<any[]>>;
   browseContentOpen: boolean;
   setBrowseContentOpen: Dispatch<SetStateAction<boolean>>;
   startItem: string;
@@ -19,6 +20,7 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
   activeInstance,
   selectNode,
   currentSelections,
+  setCurrentSelections,
   browseContentOpen,
   setBrowseContentOpen,
   startItem,
@@ -35,9 +37,14 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
     console.log('New Ids: ');
     console.log(newIds);
 
-    let udpatedStartItems = startItems.concat(newIds);
+    let udpatedStartItems = startItems.concat(newIds).filter((id) => id && id !== '');
     setStartItem(udpatedStartItems?.join(', '));
     setBrowseContentOpen(false);
+  };
+
+  const removeItem = (id: string) => {
+    let updatedSelections = currentSelections.filter((item) => item.itemId !== id);
+    setCurrentSelections(updatedSelections);
   };
 
   return (
@@ -70,8 +77,15 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
                   )}
                   {currentSelections &&
                     currentSelections?.map((item, index) => (
-                      <li data-id={item.itemId} data-name={item.name} key={index}>
-                        {item.name}
+                      <li key={index}>
+                        <a
+                          onDoubleClick={() => removeItem(item.itemId)}
+                          data-id={item.itemId}
+                          data-name={item.name}
+                          key={index}
+                        >
+                          {item.name}
+                        </a>
                       </li>
                     ))}
                 </ul>
@@ -80,6 +94,9 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
                 </Button>
               </div>
               <div className="flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setCurrentSelections([])}>
+                  Clear Selections
+                </Button>
                 <Button variant="default" size="sm" onClick={confirmSelection}>
                   Confirm Selections
                 </Button>

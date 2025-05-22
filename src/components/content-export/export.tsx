@@ -50,7 +50,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
   const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
   const [contentMainRoot, setContentMainRoot] = useState<Root>();
-  const [currentSelections, setCurrentSelections] = useState<any[]>();
+  const [currentSelections, setCurrentSelections] = useState<any[]>([]);
 
   const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
 
@@ -344,6 +344,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         currentSelections={currentSelections ?? []}
         startItem={startItem ?? ''}
         setStartItem={setStartItem}
+        setCurrentSelections={setCurrentSelections}
       ></ContentBrowseModal>
 
       <Tabs defaultValue={'content'} className="w-full">

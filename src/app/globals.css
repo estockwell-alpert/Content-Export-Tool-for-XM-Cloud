@@ -273,6 +273,10 @@ a.sitecore-node {
   color: #ccc;
 }
 
+.selected-box a {
+  cursor: pointer;
+}
+
 .content-tree li > ul {
   margin-left: 12px;
   display: none;
