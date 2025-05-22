@@ -273,7 +273,12 @@ a.sitecore-node {
   color: #ccc;
 }
 
-.selected-box a {
+.not-selectable {
+  pointer-events: none;
+  color: #aaa;
+}
+
+a {
   cursor: pointer;
 }
 

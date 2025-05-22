@@ -378,6 +378,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
         setStartItem={setTemplates}
         setCurrentSelections={setCurrentTemplateSelections}
         startNode={{ itemId: '{3C1715FE-6A13-4FCF-845F-DE308BA9741D}', name: 'templates' }}
+        templatesOnly={true}
       ></ContentBrowseModal>
 
       <Tabs defaultValue={'content'} className="w-full">
@@ -452,9 +453,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item(s)</label>
                       <div className="flex items-center gap-2 mt-4">
-                        <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
-                          Browse
-                        </Button>
+                        {activeInstance?.instanceType === enumInstanceType.auth && (
+                          <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
+                            Browse
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => clearStartItem()}>
                           Clear
                         </Button>
@@ -486,9 +489,11 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Templates</label>
                       <div className="flex items-center gap-2 mt-4">
-                        <Button variant="default" size="sm" onClick={() => setBrowseTemplatesOpen(true)}>
-                          Browse
-                        </Button>
+                        {activeInstance?.instanceType === enumInstanceType.auth && (
+                          <Button variant="default" size="sm" onClick={() => setBrowseTemplatesOpen(true)}>
+                            Browse
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
                           Clear
                         </Button>

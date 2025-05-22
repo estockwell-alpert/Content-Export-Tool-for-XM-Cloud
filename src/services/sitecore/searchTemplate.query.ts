@@ -193,6 +193,9 @@ export const ItemChildrenQuery = gql`
           name
           itemId
           hasChildren
+          template {
+            name
+          }
         }
       }
     }

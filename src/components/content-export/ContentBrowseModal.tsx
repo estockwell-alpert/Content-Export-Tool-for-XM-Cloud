@@ -15,6 +15,7 @@ interface ContentBrowseModalProps {
   startItem: string;
   setStartItem: Dispatch<SetStateAction<string>>;
   startNode: { itemId: string; name: string };
+  templatesOnly?: boolean;
 }
 
 export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
@@ -27,6 +28,7 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
   startItem,
   setStartItem,
   startNode,
+  templatesOnly,
 }) => {
   const confirmSelection = () => {
     let startItems = startItem?.split(',');
@@ -56,10 +58,12 @@ export const ContentBrowseModal: FC<ContentBrowseModalProps> = ({
                   name: startNode.name,
                   children: [],
                   hasChildren: true,
+                  template: { name: '' },
                 }}
                 activeInstance={activeInstance}
                 selectNode={selectNode}
                 currentSelections={currentSelections ?? []}
+                templatesOnly={templatesOnly}
               ></ContentNode>
             </ul>
           </div>

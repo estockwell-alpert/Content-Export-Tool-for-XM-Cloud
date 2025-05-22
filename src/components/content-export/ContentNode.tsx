@@ -9,9 +9,18 @@ interface ContentNodeProps {
   activeInstance?: IInstance;
   selectNode: (e: any) => void;
   currentSelections: IContentNode[];
+  templatesOnly?: boolean;
+  isTemplate?: boolean;
 }
 
-export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, selectNode, currentSelections }) => {
+export const ContentNode: FC<ContentNodeProps> = ({
+  item,
+  activeInstance,
+  selectNode,
+  currentSelections,
+  templatesOnly,
+  isTemplate,
+}) => {
   const [children, setChildren] = React.useState([]);
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [isLoaded, setIsLoaded] = React.useState<boolean>(false);
@@ -41,16 +50,22 @@ export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, select
     return isSelected;
   };
 
+  const isSelectable = !templatesOnly || item.template?.name === 'Template';
+
   return (
     <li data-name={item.name} data-id={item.itemId}>
-      {item.hasChildren && (
+      {item.hasChildren && (!templatesOnly || !isSelectable) && (
         <a className="browse-expand" onClick={(e) => toggleNode(e)}>
           {isOpen ? '-' : '+'}
         </a>
       )}
-      <a className={cn('sitecore-node', isSelected() ? 'selected' : '')} onDoubleClick={(e) => selectNode(e)}>
+      <a
+        className={cn('sitecore-node', isSelected() ? 'selected' : '', !isSelectable ? 'not-selectable' : '')}
+        onDoubleClick={(e) => selectNode(e)}
+      >
         {item.name}
       </a>
+
       <ul id={item.itemId} className={isOpen ? 'open' : ''}>
         {children &&
           children.map((child, index) => (
@@ -60,6 +75,7 @@ export const ContentNode: FC<ContentNodeProps> = ({ item, activeInstance, select
               selectNode={selectNode}
               activeInstance={activeInstance}
               currentSelections={currentSelections}
+              templatesOnly={templatesOnly}
             ></ContentNode>
           ))}
       </ul>
