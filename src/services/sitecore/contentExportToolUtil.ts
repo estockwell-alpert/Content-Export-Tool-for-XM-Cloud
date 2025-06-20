@@ -299,6 +299,38 @@ export const GetContentExportResults = async (
   }
 };
 
+export const GetItemChildren = async (instance: IInstance, itemId: string): Promise<any> => {
+  const gqlEndpoint = instance.graphQlEndpoint;
+  let gqlApiKey = instance.apiToken;
+  const authoringEndpoint = instance.instanceType === enumInstanceType.auth;
+
+  if (!gqlEndpoint || !gqlApiKey) {
+    return;
+  }
+
+  if (authoringEndpoint) {
+    gqlApiKey = await RefreshApiKey(instance);
+  }
+
+  const response = await fetch('/api/browse/content', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ gqlEndpoint, gqlApiKey, itemId, authoringEndpoint }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const results: any = await response.json();
+
+  console.log(results);
+
+  return results;
+};
+
 export const GetTemplateSchema = async (instance: IInstance, startItem?: string): Promise<any> => {
   const gqlEndpoint = instance.graphQlEndpoint;
   let gqlApiKey = instance.apiToken;
@@ -544,3 +576,13 @@ export const ResultsToXslx = (templates: ITemplateSchema[], fileName?: string, h
   XLSX.writeFile(workbook, `${fileName ?? 'Templates Schema'}.xlsx`);
   console.log(`Exported data to xslx`);
 };
+
+export interface IContentNode {
+  itemId: string;
+  name: string;
+  children: IContentNode[];
+  hasChildren: boolean;
+  template: {
+    name: string;
+  };
+}

@@ -181,3 +181,37 @@ export const FieldUpdateQuery = gql`
     }
   }
 `;
+
+export const ItemChildrenQuery = gql`
+  {
+    item(where: { database: "master", itemId: "[ITEMID]" }) {
+      itemId
+      name
+      path
+      children {
+        nodes {
+          name
+          itemId
+          hasChildren
+          template {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const EdgeItemChildrenQuery = gql`
+  {
+    item(path: "[ITEMID]", language: "en") {
+      children {
+        results {
+          name
+          id
+          hasChildren
+        }
+      }
+    }
+  }
+`;

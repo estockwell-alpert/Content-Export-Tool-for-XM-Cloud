@@ -214,3 +214,86 @@ button {
   font-weight: bold;
   cursor: pointer;
 }
+
+.content-tree .inner {
+  position: fixed;
+  background: white;
+  left: 30%;
+  right: 50%;
+  top: 20%;
+  z-index: 999;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  width: 50%;
+  height: 50%;
+  padding: 8px;
+}
+
+.browse-box,
+.selected-box {
+  width: 50%;
+  height: 100%;
+  overflow: auto;
+  display: inline-block;
+  padding: 4px 12px;
+}
+
+.content-tree {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none;
+}
+
+.content-tree.open {
+  display: block;
+}
+
+.content-tree li {
+  position: relative;
+  white-space: nowrap;
+}
+
+.browse-expand {
+  position: absolute;
+  color: rgb(38, 148, 192);
+  cursor: pointer;
+}
+
+a.sitecore-node {
+  padding-left: 14px;
+  cursor: pointer;
+}
+
+.sitecore-node.selected {
+  color: #ccc;
+}
+
+.not-selectable {
+  pointer-events: none;
+  color: #aaa;
+}
+
+a {
+  cursor: pointer;
+}
+
+.content-tree li > ul {
+  margin-left: 12px;
+  display: none;
+}
+
+.content-tree ul.open {
+  display: block;
+}
+
+.content-tree .selected-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}

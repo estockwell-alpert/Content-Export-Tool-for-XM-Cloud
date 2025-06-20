@@ -27,6 +27,8 @@ export async function POST(request: Request) {
 
     console.log('Run first template query with startItem: ' + startItem);
 
+    console.log(templatesQuery);
+
     const allTemplatesResponse: any = await fetch(gqlEndpoint, {
       method: 'POST',
       headers: {
@@ -37,6 +39,8 @@ export async function POST(request: Request) {
     });
 
     const jsonResults = await allTemplatesResponse.json();
+
+    console.log(JSON.stringify(jsonResults));
 
     const templateResults = jsonResults?.data?.search?.results;
 

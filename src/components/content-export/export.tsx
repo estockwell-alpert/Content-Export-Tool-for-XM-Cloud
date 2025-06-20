@@ -4,11 +4,13 @@ import {
   GenerateContentExport,
   GenerateSchemaExport,
   GetTemplateSchema,
+  IContentNode,
 } from '@/services/sitecore/contentExportToolUtil';
-import { validateGuid } from '@/services/sitecore/helpers';
+import { convertStringToGuid, validateGuid } from '@/services/sitecore/helpers';
 import { SchemaTemplate } from '@/services/sitecore/schemaTemplate.query';
 import { GraphQLClient } from 'graphql-request';
 import { FC, useEffect, useState } from 'react';
+import { createRoot, Root } from 'react-dom/client';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -16,6 +18,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
+import { ContentBrowseModal } from './ContentBrowseModal';
 import { SaveSettingsModal } from './save-settings-modal';
 
 interface ExportToolProps {
@@ -25,9 +28,9 @@ interface ExportToolProps {
 }
 
 export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen, exportOpen }) => {
-  const [startItem, setStartItem] = useState<string>();
+  const [startItem, setStartItem] = useState<string>('');
   const [templatesStartItem, setTemplatesStartItem] = useState<string>();
-  const [templates, setTemplates] = useState<string>();
+  const [templates, setTemplates] = useState<string>('');
   const [templateNames, setTemplateNames] = useState<string>();
   const [fields, setFields] = useState<string>();
   const [languages, setLanguages] = useState<string>();
@@ -45,6 +48,18 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
   const [errorTemplatesStartItem, setErrorTemplatesStartItem] = useState<boolean>(false);
   const [errorTemplates, setErrorTemplates] = useState<boolean>(false);
   const [browseDisabled, setbrowseDisabled] = useState<boolean>(true);
+  const [browseContentOpen, setBrowseContentOpen] = useState<boolean>(false);
+  const [browseTemplatesOpen, setBrowseTemplatesOpen] = useState<boolean>(false);
+  const [contentMainRoot, setContentMainRoot] = useState<Root>();
+  const [currentSelections, setCurrentSelections] = useState<any[]>([]);
+  const [currentTemplateSelections, setCurrentTemplateSelections] = useState<any[]>([]);
+
+  const sitecoreRootId = '{11111111-1111-1111-1111-111111111111}-root';
+
+  const clearStartItem = () => {
+    setStartItem('');
+    setCurrentSelections([]);
+  };
 
   const handleStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!validateGuid(event.target.value ?? '')) {
@@ -52,7 +67,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     } else {
       setErrorStartItem(false);
     }
-    setStartItem(event.target.value);
+    const inputValue = event.target.value;
+    setStartItem(inputValue);
   };
   const handleTemplatesStartItem = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTemplatesStartItem(event.target.value);
@@ -154,6 +170,46 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   };
 
+  const resetTree = () => {
+    if (contentMainRoot) {
+      contentMainRoot.render(<ul id={sitecoreRootId}></ul>);
+    }
+  };
+
+  const selectNode = (e: any) => {
+    const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
+    const name = e.target.parentElement.getAttribute('data-name');
+
+    if (e.target.classList.contains('selected')) {
+      // remove id
+      let updatedSelections = currentSelections?.filter((item: IContentNode) => item.itemId !== id);
+      setCurrentSelections(updatedSelections);
+    } else {
+      // add ID
+      let selectedItem = { itemId: id, name: name, children: [] };
+      let selectedItems: any[] =
+        currentSelections === undefined ? [selectedItem] : currentSelections?.concat(selectedItem);
+      setCurrentSelections(selectedItems);
+    }
+  };
+
+  const selectTemplateNode = (e: any) => {
+    const id = convertStringToGuid(e.target.parentElement.getAttribute('data-id'));
+    const name = e.target.parentElement.getAttribute('data-name');
+
+    if (e.target.classList.contains('selected')) {
+      // remove id
+      let updatedSelections = currentTemplateSelections?.filter((item: IContentNode) => item.itemId !== id);
+      setCurrentTemplateSelections(updatedSelections);
+    } else {
+      // add ID
+      let selectedItem = { itemId: id, name: name, children: [] };
+      let selectedItems: any[] =
+        currentTemplateSelections === undefined ? [selectedItem] : currentTemplateSelections?.concat(selectedItem);
+      setCurrentTemplateSelections(selectedItems);
+    }
+  };
+
   // TODO: UPDATE THIS TO WORK WITH AUTHORING API???
   const browseFields = async () => {
     setAvailableFields([]);
@@ -239,6 +295,13 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
     }
   }, []);
 
+  useEffect(() => {
+    const rootElem = document.getElementById(sitecoreRootId);
+    if (!rootElem) return;
+    setContentMainRoot(createRoot(rootElem));
+    resetTree();
+  }, [activeInstance]);
+
   const handleSaveSettings = (newSettings: Omit<ISettings, 'id'>) => {
     const settings: ISettings = {
       ...newSettings,
@@ -276,8 +339,8 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
       return;
     }
 
-    setStartItem(setting.startItem);
-    setTemplates(setting.templates);
+    setStartItem(setting.startItem ?? '');
+    setTemplates(setting.templates ?? '');
     setFields(setting.fields);
     setLanguages(setting.languages);
     setIncludeLang(setting.includeLang);
@@ -291,6 +354,33 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
 
   return (
     <>
+      {/* Content Browse */}
+      <ContentBrowseModal
+        activeInstance={activeInstance}
+        browseContentOpen={browseContentOpen}
+        setBrowseContentOpen={setBrowseContentOpen}
+        selectNode={selectNode}
+        currentSelections={currentSelections ?? []}
+        startItem={startItem ?? ''}
+        setStartItem={setStartItem}
+        setCurrentSelections={setCurrentSelections}
+        startNode={{ itemId: '{11111111-1111-1111-1111-111111111111}', name: 'sitecore' }}
+      ></ContentBrowseModal>
+
+      {/* Template Browse */}
+      <ContentBrowseModal
+        activeInstance={activeInstance}
+        browseContentOpen={browseTemplatesOpen}
+        setBrowseContentOpen={setBrowseTemplatesOpen}
+        selectNode={selectTemplateNode}
+        currentSelections={currentTemplateSelections ?? []}
+        startItem={templatesStartItem ?? ''}
+        setStartItem={setTemplates}
+        setCurrentSelections={setCurrentTemplateSelections}
+        startNode={{ itemId: '{3C1715FE-6A13-4FCF-845F-DE308BA9741D}', name: 'templates' }}
+        templatesOnly={true}
+      ></ContentBrowseModal>
+
       <Tabs defaultValue={'content'} className="w-full">
         <TabsList className="grid w-full grid-cols-2 border-b border-border">
           <TabsTrigger value="content" className="">
@@ -358,12 +448,19 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                 <Card className="rounded-sm border bg-card p-6">
                   <CardTitle>Filters</CardTitle>
                   {/* Start Items Section */}
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item(s)</label>
-                      <Button variant="ghost" size="sm" onClick={() => setStartItem('')}>
-                        Clear
-                      </Button>
+                      <div className="flex items-center gap-2 mt-4">
+                        <Button variant="default" size="sm" onClick={() => setBrowseContentOpen(true)}>
+                          Browse
+                        </Button>
+
+                        <Button variant="ghost" size="sm" onClick={() => clearStartItem()}>
+                          Clear
+                        </Button>
+                      </div>
                     </div>
                     <Textarea
                       value={startItem}
@@ -390,9 +487,16 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Templates</label>
-                      <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
-                        Clear
-                      </Button>
+                      <div className="flex items-center gap-2 mt-4">
+                        {activeInstance?.instanceType === enumInstanceType.auth && (
+                          <Button variant="default" size="sm" onClick={() => setBrowseTemplatesOpen(true)}>
+                            Browse
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => setTemplates('')}>
+                          Clear
+                        </Button>
+                      </div>
                     </div>
                     <Textarea
                       value={templates}
@@ -622,6 +726,7 @@ export const ExportTool: FC<ExportToolProps> = ({ activeInstance, setExportOpen,
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium">Start Item</label>
+
                       <Button variant="ghost" size="sm" onClick={() => setTemplatesStartItem('')}>
                         Clear
                       </Button>
