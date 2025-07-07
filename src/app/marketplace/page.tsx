@@ -1,19 +1,16 @@
 'use client';
 
 import { AppSidebar } from '@/components/app-sidebar';
-import { ContentExportStats } from '@/components/stats/content-export';
-import { CopilotRequestStats } from '@/components/stats/copilot-requests';
-import { InstanceStats } from '@/components/stats/instance';
+import MarketplaceSDKComponent from '@/components/MarketplaceSDK';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from '@/components/ui/breadcrumb';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Welcome } from '@/components/welcome';
 import { IInstance } from '@/models/IInstance';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Separator } from '@radix-ui/react-separator';
 import sitecoreTheme, { toastOptions } from '@sitecore/blok-theme';
 import { useEffect, useState } from 'react';
 
-export default function Home() {
+export default function MarketplaceSandbox() {
   const [instances, setInstances] = useState<IInstance[]>([]);
 
   useEffect(() => {
@@ -39,28 +36,16 @@ export default function Home() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="#">Marketplace Sandbox</BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
         <div className="container mx-auto py-6 px-4 md:px-6">
-          <h2 className="text-lg font-semibold mb-4">Dashboard</h2>
-
-          {instances ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <InstanceStats />
-                <ContentExportStats />
-                <CopilotRequestStats />
-              </div>
-            </>
-          ) : (
-            <Welcome />
-          )}
-
-          <ChakraProvider theme={sitecoreTheme} toastOptions={toastOptions}></ChakraProvider>
+          <ChakraProvider theme={sitecoreTheme} toastOptions={toastOptions}>
+            <MarketplaceSDKComponent />
+          </ChakraProvider>
         </div>
       </SidebarInset>
     </SidebarProvider>

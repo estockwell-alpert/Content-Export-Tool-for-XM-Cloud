@@ -142,7 +142,10 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
                 <FormItem>
                   <FormLabel>GraphQL Endpoint</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/graphql" {...field} />
+                    <Input
+                      placeholder="https://xmc-mysite.sitecorecloud.io/sitecore/api/authoring/graphql/v1"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

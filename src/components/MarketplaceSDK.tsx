@@ -5,6 +5,7 @@ import { XMC } from '@sitecore-marketplace-sdk/xmc';
 import { useEffect, useRef, useState } from 'react';
 
 const defaultHostURL = 'https://marketplace-app.sitecorecloud.io';
+//const defaultHostURL = 'https://xmapps.sitecorecloud.io';
 /* Host URL options:
 - XM Cloud full page: https://xmapps.sitecorecloud.io
 - XM Cloud page builder: https://pages.sitecorecloud.io

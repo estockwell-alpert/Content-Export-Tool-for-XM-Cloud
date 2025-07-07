@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Code, FileDown, GalleryVerticalEnd, HousePlug, Settings } from 'lucide-react';
+import { BookOpen, Code, FileDown, GalleryVerticalEnd, HousePlug, Settings, Store } from 'lucide-react';
 import * as React from 'react';
 
 import { NavMain } from '@/components/nav-main';
@@ -62,6 +62,11 @@ const data = {
           url: '/settings/config',
         },
       ],
+    },
+    {
+      title: 'Marketplace',
+      url: '/marketplace',
+      icon: Store,
     },
     {
       title: 'Documentation',
