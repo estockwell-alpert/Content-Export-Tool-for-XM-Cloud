@@ -1,5 +1,6 @@
 'use client';
 import { enumInstanceType, IInstance } from '@/models/IInstance';
+import { Spinner, Wrap } from '@chakra-ui/react';
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
 import { FC, useEffect, useState } from 'react';
@@ -52,7 +53,9 @@ export const ContentTransferTool: FC<ContentTransferToolProps> = ({ instances, i
       <div className="fixed inset-0 bg-black/50 hidden" id="loading-modal">
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
           <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <Wrap spacing="6" align="center">
+              <Spinner size="xl" />
+            </Wrap>
           </div>
         </div>
       </div>
