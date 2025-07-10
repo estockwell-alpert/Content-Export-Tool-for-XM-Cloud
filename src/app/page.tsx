@@ -7,7 +7,7 @@ import { InstanceStats } from '@/components/stats/instance';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from '@/components/ui/breadcrumb';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Welcome } from '@/components/welcome';
-import { IInstance } from '@/models/IInstance';
+import { enumInstanceType, IInstance } from '@/models/IInstance';
 import { Separator } from '@radix-ui/react-separator';
 import { useEffect, useState } from 'react';
 
@@ -24,6 +24,19 @@ export default function Home() {
         console.error('Error parsing instances from localStorage:', error);
       }
     }
+
+    const defaultEdgeInstance: IInstance = {
+      id: 'Edge Default Instance',
+      name: 'Edge Default Instance',
+      instanceType: enumInstanceType.edge,
+      clientId: '',
+      clientSecret: '',
+      graphQlEndpoint: 'https://edge.sitecorecloud.io/api/graphql/v1',
+      apiToken: 'SVNQKzlEcVJrQW1aNmE1M2RzSHo4bE9HZFo0S1g2a3hPdTAzVWhCd2lRTT18Y25oLWU2MTYyY2Nj',
+    };
+
+    const updatedInstances = [...instances, defaultEdgeInstance];
+    setInstances(updatedInstances);
   }, []);
 
   return (
