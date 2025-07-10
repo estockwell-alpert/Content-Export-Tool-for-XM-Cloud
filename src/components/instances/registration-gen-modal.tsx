@@ -55,7 +55,7 @@ export const RegistrationGenModal = ({ open, onOpenChange, onSubmit }: InstanceR
     try {
       setHasError(false);
       let tokenResponse;
-      tokenResponse = await getXmCloudToken(clientid, clientid);
+      tokenResponse = await getXmCloudToken(clientid, clientsecret);
 
       onSubmit({
         name: instanceName,
